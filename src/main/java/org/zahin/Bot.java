@@ -1,6 +1,8 @@
-import cmd.*;
-import db.DatabaseHandler;
-import db.DatabaseLoader;
+package org.zahin;
+
+import org.zahin.cmd.*;
+import org.zahin.db.DatabaseHandler;
+import org.zahin.db.DatabaseLoader;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;

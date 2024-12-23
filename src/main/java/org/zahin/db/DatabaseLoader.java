@@ -1,4 +1,4 @@
-package db;
+package org.zahin.db;
 
 import net.dv8tion.jda.api.events.session.*;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;

@@ -1,12 +1,12 @@
-package cmd;
+package org.zahin.cmd;
 
-import db.DatabaseHandler;
-import db.UserProfile;
+import org.zahin.db.DatabaseHandler;
+import org.zahin.db.UserProfile;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import util.Util;
+import org.zahin.util.Util;
 
 import java.awt.*;
 import java.time.Instant;

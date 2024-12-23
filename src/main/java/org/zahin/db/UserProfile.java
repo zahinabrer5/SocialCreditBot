@@ -1,4 +1,4 @@
-package db;
+package org.zahin.db;
 
 import org.jetbrains.annotations.NotNull;
 

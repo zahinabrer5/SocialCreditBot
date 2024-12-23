@@ -1,4 +1,4 @@
-package cmd;
+package org.zahin.cmd;
 
 import java.util.List;
 

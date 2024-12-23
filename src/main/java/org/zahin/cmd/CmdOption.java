@@ -1,4 +1,4 @@
-package cmd;
+package org.zahin.cmd;
 
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 

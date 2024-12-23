@@ -1,4 +1,4 @@
-package util;
+package org.zahin.util;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

@@ -1,6 +1,6 @@
-package db;
+package org.zahin.db;
 
-import util.Util;
+import org.zahin.util.Util;
 
 import java.io.*;
 import java.math.BigInteger;
