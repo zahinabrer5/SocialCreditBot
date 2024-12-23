@@ -1,21 +1,22 @@
 import cmd.*;
 import db.DatabaseHandler;
+import db.DatabaseLoader;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.events.session.*;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import cmd.CmdOption;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 
 import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 
@@ -23,7 +24,7 @@ public class Bot extends ListenerAdapter {
     private static final Dotenv dotenv = Dotenv.load();
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static final DatabaseHandler dbHandler = new DatabaseHandler("/db/credit.csv");
-    private static Map<CmdData, Cmd> cmdMap = Map.of(
+    private static final Map<CmdData, Cmd> cmdMap = Map.of(
             new CmdData("credit", "Add or subtract social credit from a user",
                     List.of(new CmdOption(USER, "user", "The user to add or subtract credit from", true),
                             new CmdOption(INTEGER, "amount", "Amount of credit to add or subtract", true)),
@@ -45,7 +46,7 @@ public class Bot extends ListenerAdapter {
 
     public static void main(String[] args) {
         JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), EnumSet.noneOf(GatewayIntent.class)) // slash commands don't need any intents
-                .addEventListeners(new Bot())
+                .addEventListeners(new Bot(), new DatabaseLoader(dbHandler))
                 .build();
 
         // These commands might take a few minutes to be active after creation/update/delete
@@ -68,44 +69,6 @@ public class Bot extends ListenerAdapter {
             result.add(slashCmd);
         });
         return result;
-    }
-
-    // Database
-    @Override
-    public void onReady(@NotNull ReadyEvent event) {
-        dbHandler.loadDatabase();
-        log.info("Ready! Loaded Database");
-    }
-
-    @Override
-    public void onSessionResume(@NotNull SessionResumeEvent event) {
-//        dbHandler.loadDatabase();
-//        log.info("Loaded Database due to Session Resume");
-    }
-
-    @Override
-    public void onSessionRecreate(@NotNull SessionRecreateEvent event) {
-//        dbHandler.loadDatabase();
-//        log.info("Loaded Database due to Session Recreate");
-    }
-
-    @Override
-    public void onSessionDisconnect(@NotNull SessionDisconnectEvent event) {
-//        dbHandler.saveDatabase();
-//        log.info("Saved Database due to Session Disconnect");
-    }
-
-    @Override
-    public void onSessionInvalidate(@NotNull SessionInvalidateEvent event) {
-//        dbHandler.saveDatabase();
-//        dbHandler.loadDatabase();
-//        log.info("Saved and (re)loaded Database due to Session Invalidate");
-    }
-
-    @Override
-    public void onShutdown(@NotNull ShutdownEvent event) {
-//        dbHandler.saveDatabase();
-//        log.info("Saved Database due to Shutdown");
     }
 
     // Slash Commands
