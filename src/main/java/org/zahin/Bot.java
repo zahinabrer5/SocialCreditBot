@@ -26,7 +26,7 @@ import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 public class Bot extends ListenerAdapter {
     private static final Dotenv dotenv = Dotenv.load();
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
-    private static final DatabaseHandler dbHandler = new DatabaseHandler("/db/credit.csv");
+    private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"));
     private static final Map<CmdData, Cmd> cmdMap = Map.of(
             new CmdData("credit", "Add or subtract social credit from a user",
                     List.of(new CmdOption(USER, "user", "The user to add or subtract credit from", true),

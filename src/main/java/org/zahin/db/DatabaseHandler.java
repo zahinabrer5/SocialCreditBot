@@ -13,7 +13,7 @@ public class DatabaseHandler {
     private final Map<String, UserProfile> userTable = new HashMap<>();
 
     public DatabaseHandler(String databaseFile) {
-        this.databaseFile = Util.getFile(databaseFile);
+        this.databaseFile = new File(databaseFile);
     }
 
     public void loadDatabase() {
