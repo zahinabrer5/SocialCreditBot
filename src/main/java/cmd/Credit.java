@@ -1,53 +1,63 @@
 package cmd;
 
 import db.DatabaseHandler;
+import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import util.Util;
 
-import java.awt.*;
 import java.math.BigInteger;
+import java.time.Instant;
 
 public class Credit extends Cmd {
     private final DatabaseHandler dbHandler;
+    private final Dotenv dotenv;
 
-    public Credit(DatabaseHandler dbHandler) {
+    public Credit(DatabaseHandler dbHandler, Dotenv dotenv) {
         this.dbHandler = dbHandler;
+        this.dotenv = dotenv;
     }
 
     @Override
     public void run(SlashCommandInteractionEvent event) {
         // the "user" option is required, so it doesn't need a null-check here
         User user = event.getOption("user").getAsUser();
-        Member member = event.getOption("user").getAsMember();
         long amount = event.getOption("amount").getAsLong();
-        credit(event, user, member, amount);
+        // however, we must do null-check on "reason" option since it's optional
+        String reason = "";
+        OptionMapping reasonOption = event.getOption("reason");
+        if (reasonOption != null)
+            reason = reasonOption.getAsString();
+        credit(event, user, amount, reason);
     }
 
-    private void credit(SlashCommandInteractionEvent event, User user, Member member, long amount) {
+    private void credit(SlashCommandInteractionEvent event, User user, long amount, String reason) {
         if (amount == 0) {
             event.reply("`amount` cannot be 0 (zero)!").setEphemeral(true).queue();
             return;
         }
+
+        if (!reason.isEmpty())
+            reason = String.format("**__Reason:__** %s%n%n", reason);
 
         String userId = user.getId();
         dbHandler.update(userId, amount);
         BigInteger balance = dbHandler.read(userId).balance();
 
         EmbedBuilder eb = new EmbedBuilder();
-        eb.setAuthor("People's Republic of OC STEM");
+        eb.setAuthor(dotenv.get("BOT_NAME"));
         eb.setTitle(Util.fmt.format(amount)+" social credit!");
-        eb.setDescription(String.format("<@%s> now has %d social credit", userId, balance));
+        eb.setDescription(String.format("%s<@%s> now has **%d** social credit", reason, userId, balance));
         eb.setFooter("Try /leaderboard");
-//        eb.setTimestamp(LocalDateTime.now(ZoneId.of("America/Toronto")));
+        eb.setTimestamp(Instant.now());
 
         String img = "https://i.imgur.com/HsM6YU1.png";
-        Color colour = new Color(0x2eb33e);
+        int colour = 0x2eb33e;
         if (amount < 0) {
             img = "https://i.imgur.com/l4sQ8lV.png";
-            colour = new Color(0xff0000);
+            colour = 0xff0000;
         }
         eb.setThumbnail(img);
         eb.setColor(colour);

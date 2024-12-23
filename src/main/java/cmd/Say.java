@@ -19,7 +19,7 @@ public class Say extends Cmd {
 
     private void say(SlashCommandInteractionEvent event, String content, Channel channel) {
         if (channel.getType() != ChannelType.TEXT) {
-            event.reply("Channel must be a text channel!").setEphemeral(true).queue();
+            event.reply("`channel` must be a text channel!").setEphemeral(true).queue();
             return;
         }
 

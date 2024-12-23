@@ -4,6 +4,7 @@ import db.DatabaseLoader;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -27,16 +28,17 @@ public class Bot extends ListenerAdapter {
     private static final Map<CmdData, Cmd> cmdMap = Map.of(
             new CmdData("credit", "Add or subtract social credit from a user",
                     List.of(new CmdOption(USER, "user", "The user to add or subtract credit from", true),
-                            new CmdOption(INTEGER, "amount", "Amount of credit to add or subtract", true)),
-                    true, false), new Credit(dbHandler),
+                            new CmdOption(INTEGER, "amount", "Amount of credit to add or subtract", true),
+                            new CmdOption(STRING, "reason", "Reason for adding or subtracting credit", false)),
+                    true, false), new Credit(dbHandler, dotenv),
 
             new CmdData("leaderboard", "View social credit rankings",
                     List.of(new CmdOption(INTEGER, "max", "Number of users to display. If not provided, defaults to 10", false)),
-                    true, true), new Leaderboard(dbHandler),
+                    true, true), new Leaderboard(dbHandler, dotenv),
 
             new CmdData("profile", "View a user's social credit stats",
                     List.of(new CmdOption(USER, "user", "The user to view", true)),
-                    true, true), new Profile(dbHandler),
+                    true, true), new Profile(dbHandler, dotenv),
 
             new CmdData("say", "Makes the bot say what you tell it to",
                     List.of(new CmdOption(STRING, "content", "What the bot should say", true),
@@ -57,6 +59,8 @@ public class Bot extends ListenerAdapter {
         // Send the new set of commands to discord, this will override any existing global commands with the new set provided here
         commands.queue();
         log.info("Registered slash commands");
+
+        jda.getPresence().setActivity(Activity.customStatus("Observing citizens of "+dotenv.get("MAIN_SERVER")));
     }
 
     private static List<SlashCommandData> getSlashCommands() {
@@ -80,9 +84,9 @@ public class Bot extends ListenerAdapter {
             return;
         }
 
-        // ensure the commands will only work in OC STEM or the test server
+        // ensure the commands will only work in main server or the test server
         String serverId = event.getGuild().getId();
-        if (!serverId.equals(dotenv.get("OC-STEM_ID")) && !serverId.equals(dotenv.get("TEST_SERVER_ID"))) {
+        if (!serverId.equals(dotenv.get("MAIN_SERVER_ID")) && !serverId.equals(dotenv.get("TEST_SERVER_ID"))) {
             event.reply("NOOBY NOOB").queue();
             return;
         }
@@ -95,7 +99,7 @@ public class Bot extends ListenerAdapter {
             if (event.getName().equals(cmdData.name())) {
                 found = true;
 
-                // ensure only me and Bhaia can use the bot, except for whitelisted commands (which can be used by anyone)
+                // ensure only owner and dev can use the bot, except for whitelisted commands (which can be used by anyone)
                 String userId = event.getUser().getId();
                 if (!userId.equals(dotenv.get("OWNER_ID")) && !userId.equals(dotenv.get("DEV_ID")) && !cmdData.whitelisted()) {
                     event.reply("NOOB").queue();
