@@ -39,4 +39,4 @@ build/
 
 ### Custom ###
 .env
-src/main/resources/credit.csv
+src/main/resources/db/credit.csv

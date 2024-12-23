@@ -1,10 +1,14 @@
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
+package db;
+
+import util.Util;
 
 import java.io.*;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-public class DatabaseHandler extends ListenerAdapter {
+public class DatabaseHandler {
     private final File databaseFile;
     private final Map<String, UserProfile> userTable = new HashMap<>();
 
