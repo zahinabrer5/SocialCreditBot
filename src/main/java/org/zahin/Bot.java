@@ -24,7 +24,6 @@ import java.util.Map;
 import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 
 public class Bot extends ListenerAdapter {
-    private static final boolean maintenanceMode = false;
     private static final Dotenv dotenv = Dotenv.load();
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"));
