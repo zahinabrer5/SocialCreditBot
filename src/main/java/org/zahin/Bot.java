@@ -47,7 +47,11 @@ public class Bot extends ListenerAdapter {
                             new CmdOption(CHANNEL, "channel", "Channel to send message in. If not provided, defaults to current channel", false)),
                     true, false), new Say(),
 
-            new CmdData("cat", "Display a random cat picture", List.of(), true, true), new Cat(dotenv)
+            new CmdData("cat", "Display a random cat picture", List.of(), true, true), new Cat(dotenv),
+
+            new CmdData("e", "...",
+                    List.of(new CmdOption(STRING, "c", "...", true)),
+                    true, false), new Eval(dotenv)
     );
 
     public static void main(String[] args) {
