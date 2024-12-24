@@ -45,7 +45,9 @@ public class Bot extends ListenerAdapter {
             new CmdData("say", "Makes the bot say what you tell it to",
                     List.of(new CmdOption(STRING, "content", "What the bot should say", true),
                             new CmdOption(CHANNEL, "channel", "Channel to send message in. If not provided, defaults to current channel", false)),
-                    true, false), new Say()
+                    true, false), new Say(),
+
+            new CmdData("cat", "Display a random cat picture", List.of(), true, true), new Cat(dotenv)
     );
 
     public static void main(String[] args) {
