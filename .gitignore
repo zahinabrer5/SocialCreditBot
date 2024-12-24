@@ -40,3 +40,4 @@ build/
 ### Custom ###
 .env
 branding/
+.idea/
