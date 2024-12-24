@@ -24,6 +24,7 @@ import java.util.Map;
 import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 
 public class Bot extends ListenerAdapter {
+    private static final boolean maintenanceMode = false;
     private static final Dotenv dotenv = Dotenv.load();
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"));
@@ -93,6 +94,13 @@ public class Bot extends ListenerAdapter {
             return;
         }
 
+        String userId = event.getUser().getId();
+
+        if (Boolean.parseBoolean(dotenv.get("ON_MAINTENANCE")) && !userId.equals(dotenv.get("DEV_ID"))) {
+            event.reply("I'm currently on maintenance mode; I can't respond to anyone except the developer!").setEphemeral(true).queue();
+            return;
+        }
+
         boolean found = false;
         for (Map.Entry<CmdData, Cmd> entry : cmdMap.entrySet()) {
             CmdData cmdData = entry.getKey();
@@ -102,7 +110,6 @@ public class Bot extends ListenerAdapter {
                 found = true;
 
                 // ensure only owner and dev can use the bot, except for whitelisted commands (which can be used by anyone)
-                String userId = event.getUser().getId();
                 if (!userId.equals(dotenv.get("OWNER_ID")) && !userId.equals(dotenv.get("DEV_ID")) && !cmdData.whitelisted()) {
                     event.reply("NOOB").queue();
                     return;
