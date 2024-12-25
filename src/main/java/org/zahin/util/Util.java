@@ -3,7 +3,9 @@ package org.zahin.util;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
@@ -15,7 +17,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class Util {
-    public static NumberFormat fmt = new DecimalFormat("+#;-#");
+    public static NumberFormat numFmt = new DecimalFormat("+#;-#");
+    public static DecimalFormat decFmt = new DecimalFormat("##.00");
 
     public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
         List<Entry<K, V>> list = new ArrayList<>(map.entrySet());
@@ -28,7 +31,7 @@ public class Util {
         return result;
     }
 
-    public static Image urlToImg(String url) {
+    public static Image urlToImage(String url) {
         try {
             return ImageIO.read(new URI(url).toURL());
         } catch (IOException | URISyntaxException e) {
@@ -101,4 +104,16 @@ public class Util {
         return (int)Math.round(Math.sqrt(x));
     }
     */
+
+    // https://stackoverflow.com/a/13632114/21405641
+    public static String urlContentToString(String requestURL) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new URI(requestURL).toURL().openStream()))) {
+            StringBuilder sb = new StringBuilder();
+            for (String line; (line = br.readLine()) != null; )
+                sb.append(line);
+            return sb.toString();
+        } catch (URISyntaxException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

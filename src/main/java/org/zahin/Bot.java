@@ -1,5 +1,6 @@
 package org.zahin;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.zahin.cmd.*;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.db.DatabaseLoader;
@@ -27,6 +28,7 @@ public class Bot extends ListenerAdapter {
     private static final Dotenv dotenv = Dotenv.load();
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"));
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Map<CmdData, Cmd> cmdMap = Map.of(
             new CmdData("credit", "Add or subtract social credit from a user",
                     List.of(new CmdOption(USER, "user", "The user to add or subtract credit from", true),
@@ -47,11 +49,17 @@ public class Bot extends ListenerAdapter {
                             new CmdOption(CHANNEL, "channel", "Channel to send message in. If not provided, defaults to current channel", false)),
                     true, false), new Say(),
 
-            new CmdData("cat", "Display a random cat picture", List.of(), true, true), new Cat(dotenv),
+            new CmdData("cat", "Acquire a random cat picture",
+                    List.of(),
+                    true, true), new Cat(dotenv, objectMapper),
 
             new CmdData("e", "...",
                     List.of(new CmdOption(STRING, "c", "...", true)),
-                    true, false), new Eval(dotenv)
+                    true, false), new Eval(dotenv),
+
+            new CmdData("tanki", "View a Tanki Online player's ratings",
+                    List.of(new CmdOption(STRING, "player", "The player to view", true)),
+                    true, true), new Tanki(objectMapper)
     );
 
     public static void main(String[] args) {

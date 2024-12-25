@@ -42,7 +42,7 @@ public class Profile extends Cmd {
         eb.setTimestamp(Instant.now());
 
         String pfp = user.getAvatarUrl();
-        int colour = Util.mostCommonColour(Util.urlToImg(pfp));
+        int colour = Util.mostCommonColour(Util.urlToImage(pfp));
         eb.setThumbnail(pfp);
         eb.setColor(colour);
 

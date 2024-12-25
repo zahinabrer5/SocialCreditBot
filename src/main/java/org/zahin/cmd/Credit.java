@@ -48,9 +48,8 @@ public class Credit extends Cmd {
 
         EmbedBuilder eb = new EmbedBuilder();
         eb.setAuthor(dotenv.get("BOT_NAME"));
-        eb.setTitle(Util.fmt.format(amount)+" social credit!");
+        eb.setTitle(Util.numFmt.format(amount)+" social credit!");
         eb.setDescription(String.format("%s<@%s> now has **%d** social credit", reason, userId, balance));
-//        eb.setFooter("Try /leaderboard");
         eb.setTimestamp(Instant.now());
 
         String img = "https://i.imgur.com/HsM6YU1.png";

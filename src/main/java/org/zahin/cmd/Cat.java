@@ -1,25 +1,23 @@
 package org.zahin.cmd;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.cdimascio.dotenv.Dotenv;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.utils.FileUpload;
+import org.zahin.util.CustomEmbed;
 import org.zahin.util.Util;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Instant;
-import java.util.List;
-
-record CatApiRequest(List<Object> breeds, String id, String url, int width, int height) {}
+import java.io.InputStream;
 
 public class Cat extends Cmd {
-    Dotenv dotenv;
+    private final Dotenv dotenv;
+    private final ObjectMapper objectMapper;
 
-    public Cat(Dotenv dotenv) {
+    public Cat(Dotenv dotenv, ObjectMapper objectMapper) {
         this.dotenv = dotenv;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -28,26 +26,43 @@ public class Cat extends Cmd {
     }
 
     private void cat(SlashCommandInteractionEvent event) {
+        long start = System.nanoTime();
         String url = "https://api.thecatapi.com/v1/images/search?api_key="+dotenv.get("CAT_API_KEY");
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<CatApiRequest> request;
+        String json = Util.urlContentToString(url);
+        JsonNode node;
         try {
-            request = objectMapper.readValue(new URI(url).toURL(), new TypeReference<>(){});
-        } catch (IOException | URISyntaxException e) {
+            node = objectMapper.readTree(json).get(0);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        String retrievedCatUrl = request.getFirst().url();
 
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setAuthor(dotenv.get("BOT_NAME"));
-        eb.setTitle("Here's your cat:");
-//        eb.setFooter("Try /say");
-        eb.setTimestamp(Instant.now());
+        if (node.has("url")) {
+            String retrievedCatUrl = node.get("url").asText("");
+            long stop = System.nanoTime();
+            double elapsed = (stop - start) / 1_000_000.0;
 
-        int colour = Util.mostCommonColour(Util.urlToImg(retrievedCatUrl));
-        eb.setImage(retrievedCatUrl);
-        eb.setColor(colour);
+            CustomEmbed embed = new CustomEmbed(dotenv);
+            embed.setTitle("Cat(s) acquired:");
+            // showing how long the operation took could be a security risk in a production environment...
+            if (Boolean.parseBoolean(dotenv.get("ON_MAINTENANCE"))) {
+                embed.setFooter("Cat(s) acquired in "+Util.decFmt.format(elapsed)+" ms");
+            }
 
-        event.replyEmbeds(eb.build()).queue();
+            int colour = Util.mostCommonColour(Util.urlToImage(retrievedCatUrl));
+            embed.setColour(colour);
+
+            if (retrievedCatUrl.isEmpty()) {
+                InputStream contingencyCat = getClass().getResourceAsStream("/img/tabby.jpg");
+                embed.setImage("attachment://tabby.jpg");
+                event.getMessageChannel().sendFiles(FileUpload.fromData(contingencyCat, "tabby.jpg")).setEmbeds(embed.build()).queue();
+            }
+            else {
+                embed.setImage(retrievedCatUrl);
+                event.replyEmbeds(embed.build()).queue();
+            }
+        }
+        else {
+            event.reply("Something has gone horribly wrong... your cat is nowhere to be found!!! Perhaps try again :cat:").setEphemeral(true).queue();
+        }
     }
 }
