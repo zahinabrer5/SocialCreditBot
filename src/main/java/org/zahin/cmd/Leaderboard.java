@@ -38,7 +38,7 @@ public class Leaderboard extends Cmd {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setAuthor(dotenv.get("BOT_NAME"));
         eb.setTitle("Top "+max+" Best Citizens of "+dotenv.get("MAIN_SERVER"));
-        eb.setFooter("Try /profile");
+//        eb.setFooter("Try /profile");
         eb.setTimestamp(Instant.now());
         eb.setColor(0xfcdb00);
 

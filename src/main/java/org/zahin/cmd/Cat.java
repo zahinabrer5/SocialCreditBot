@@ -41,7 +41,7 @@ public class Cat extends Cmd {
         EmbedBuilder eb = new EmbedBuilder();
         eb.setAuthor(dotenv.get("BOT_NAME"));
         eb.setTitle("Here's your cat:");
-        eb.setFooter("Try /say");
+//        eb.setFooter("Try /say");
         eb.setTimestamp(Instant.now());
 
         int colour = Util.mostCommonColour(Util.urlToImg(retrievedCatUrl));

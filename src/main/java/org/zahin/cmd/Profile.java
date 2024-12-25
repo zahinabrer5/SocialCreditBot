@@ -38,7 +38,7 @@ public class Profile extends Cmd {
                 Number of Credit Gains:  %d
                 Number of Credit Losses: %d
                 ```""", profile.id(), profile.balance(), profile.numGain(), profile.numLoss()));
-        eb.setFooter("Try /credit");
+//        eb.setFooter("Try /credit");
         eb.setTimestamp(Instant.now());
 
         String pfp = user.getAvatarUrl();

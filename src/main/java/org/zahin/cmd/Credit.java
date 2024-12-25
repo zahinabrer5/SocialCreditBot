@@ -50,7 +50,7 @@ public class Credit extends Cmd {
         eb.setAuthor(dotenv.get("BOT_NAME"));
         eb.setTitle(Util.fmt.format(amount)+" social credit!");
         eb.setDescription(String.format("%s<@%s> now has **%d** social credit", reason, userId, balance));
-        eb.setFooter("Try /leaderboard");
+//        eb.setFooter("Try /leaderboard");
         eb.setTimestamp(Instant.now());
 
         String img = "https://i.imgur.com/HsM6YU1.png";
