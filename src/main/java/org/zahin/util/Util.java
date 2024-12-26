@@ -16,7 +16,8 @@ import java.util.Map.Entry;
 
 public class Util {
     public static NumberFormat plusMinusNumFmt = new DecimalFormat("+#;-#");
-    public static DecimalFormat decFmt = new DecimalFormat("#.##");
+    public static DecimalFormat twoDecFmt = new DecimalFormat("#.##");
+    public static DecimalFormat oneDecFmt = new DecimalFormat("#.#");
 
     public static String thousandsSep(long n) {
         return thousandsSep(n, ' ');

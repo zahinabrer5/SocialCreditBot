@@ -2,13 +2,16 @@ package org.zahin.cmd;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.cdimascio.dotenv.Dotenv;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.zahin.util.CustomEmbed;
 import org.zahin.util.HttpResponseType;
 import org.zahin.util.Util;
 
 import java.awt.*;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -84,20 +87,21 @@ public class Tanki extends Cmd {
             embed.setDescription("Make sure the player actually exists...");
             embed.setImage("https://http.cat/"+apiResponse.responseType().statusCode());
             embed.setColor(Color.BLACK);
+            event.replyEmbeds(embed.build()).queue();
         }
         else {
             ResponseJsonObj resp = apiResponse.response();
             embed.setTitle(getRank(resp.rank())+" "+resp.name());
             embed.setUrl("https://ratings.tankionline.com/en/user/"+resp.name());
-            embed.setDescription(String.format("%,d / %,d XP", resp.score(), resp.scoreNext()));
+            embed.setDescription(String.format("%s / %s XP", Util.thousandsSep(resp.score()), Util.thousandsSep(resp.scoreNext())));
             embed.setColor(0x036530);
 
-            embed.addField("__Weekly Ratings__", getWeeklyRatingsTable(resp), false);
+            event.reply(String.format("**__Weekly Ratings__**%n%s%nSee below for rest of ratings:", getWeeklyRatingsTable(resp))).queue();
 
             embed.addField("", "**__Profile__**", false);
             embed.addField("Kills", Util.thousandsSep(resp.kills()), true);
             embed.addField("Deaths", Util.thousandsSep(resp.deaths()), true);
-            embed.addField("K/D", Util.decFmt.format(resp.kills()*1.0/resp.deaths()), true);
+            embed.addField("K/D", Util.twoDecFmt.format(resp.kills()*1.0/resp.deaths()), true);
             embed.addField("Hours in game", Util.thousandsSep(getHours(resp.modesPlayed())), true);
             int eff = resp.rating().efficiency().value()/100;
             embed.addField("Efficiency", eff < 1 ? "-" : Util.thousandsSep(eff), true);
@@ -130,8 +134,13 @@ public class Tanki extends Cmd {
 
             if (resp.hasPremium())
                 embed.setColor(0xfbd003);
+
+            MessageChannel channel = event.getMessageChannel();
+            String file = String.format("/img/ranks/Icons%s_%01d.png", resp.hasPremium() ? "Premium" : "Normal", resp.rank());
+            InputStream rankIcon = getClass().getResourceAsStream(file);
+            embed.setThumbnail("attachment://rank.png");
+            channel.sendFiles(FileUpload.fromData(rankIcon, "rank.png")).setEmbeds(embed.build()).queue();
         }
-        event.replyEmbeds(embed.build()).queue();
     }
 
     private String getGiftsInfo(List<Present> presents) {
@@ -157,7 +166,7 @@ public class Tanki extends Cmd {
         String type = favMode.type();
         double hours = favMode.timePlayed() / 3600.0 / 1000;
         String xp = Util.thousandsSep(favMode.scoreEarned());
-        return String.format("%s (%s) - %.1f hours, %s XP", name, type, hours, xp);
+        return String.format("%s (%s) - %s hours, %s XP", name, type, Util.oneDecFmt.format(hours), xp);
     }
 
     private String getFavEquipment(List<Equipment> equipment) {
@@ -177,7 +186,7 @@ public class Tanki extends Cmd {
         String name = favEq.name();
         double hours = favEq.timePlayed() / 3600.0 / 1000;
         String xp = Util.thousandsSep(favEq.scoreEarned());
-        return String.format("%s - %.1f hours, %s XP", name, hours, xp);
+        return String.format("%s - %s hours, %s XP", name, Util.oneDecFmt.format(hours), xp);
     }
 
     private String getWeeklyRatingsTable(ResponseJsonObj resp) {
@@ -201,8 +210,8 @@ public class Tanki extends Cmd {
 
         return String.format("""
                     ```javascript
-                    Rating     |      Place |      Value |  Previously
-                    --------------------------------------------------
+                    Rating     |      Place |      Value | Previously
+                    -------------------------------------------------
                     Experience | %10s | %10s | %10s
                     Gold Boxes | %10s | %10s | %10s
                     Crystals   | %10s | %10s | %10s
@@ -258,6 +267,6 @@ public class Tanki extends Cmd {
         for (Supply supply : supplies)
             if (supply.usages() > mostUsed.usages())
                 mostUsed = supply;
-        return String.format("%s, %s used", mostUsed.name(), Util.thousandsSep(mostUsed.usages()));
+        return String.format("%s - %s used", mostUsed.name(), Util.thousandsSep(mostUsed.usages()));
     }
 }
