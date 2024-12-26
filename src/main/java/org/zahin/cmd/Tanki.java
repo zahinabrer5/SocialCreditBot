@@ -96,7 +96,17 @@ public class Tanki extends Cmd {
             embed.setDescription(String.format("%s / %s XP", Util.thousandsSep(resp.score()), Util.thousandsSep(resp.scoreNext())));
             embed.setColor(0x036530);
 
-            event.reply(String.format("**__Weekly Ratings__**%n%s%nSee below for rest of ratings:", getWeeklyRatingsTable(resp))).queue();
+            CustomEmbed weeklyRatings = new CustomEmbed(dotenv);
+            weeklyRatings.addField("__Weekly Ratings__", getWeeklyRatingsTable(resp), false);
+            weeklyRatings.setFooter("See next message (embed) for rest of stats");
+            weeklyRatings.setColor(0x036530);
+
+            if (resp.hasPremium()) {
+                embed.setColor(0xfbd003);
+                weeklyRatings.setColor(0xfbd003);
+            }
+
+            event.replyEmbeds(weeklyRatings.build()).queue();
 
             embed.addField("", "**__Profile__**", false);
             embed.addField("Kills", Util.thousandsSep(resp.kills()), true);
@@ -131,9 +141,6 @@ public class Tanki extends Cmd {
                 embed.addField("Gifts", getGiftsInfo(resp.presents()), true);
 
             embed.setFooter("View on desktop for better embed formatting");
-
-            if (resp.hasPremium())
-                embed.setColor(0xfbd003);
 
             MessageChannel channel = event.getMessageChannel();
             String file = String.format("/img/ranks/Icons%s_%01d.png", resp.hasPremium() ? "Premium" : "Normal", resp.rank());
