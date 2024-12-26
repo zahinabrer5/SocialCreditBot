@@ -17,36 +17,38 @@ import java.util.Map;
 
 record Rating(int position, int value) {}
 
-record Ratings(Rating crystals, Rating efficiency, Rating golds, Rating score) {}
+record WeeklyRatings(Rating crystals, Rating efficiency, Rating golds, Rating score) {}
 
 record Supply(String id, String imageUrl, String name, int usages) {}
 
 record GameMode(String name, int scoreEarned, long timePlayed, String type) {}
 
-record Turret(int grade, String id, String imageUrl, String name, String properties, int scoreEarned, long timePlayed) {}
+record Equipment(int grade, String id, String imageUrl, String name, List<String> properties, int scoreEarned, long timePlayed) {}
+
+record Present(int count, String imageUrl, String name, String prototypeId) {}
 
 record ResponseJsonObj(
         int caughtGolds,
         int deaths,
-        List<Object> dronesPlayed,
+        List<Equipment> dronesPlayed,
         int earnedCrystals,
         int gearScore,
         boolean hasPremium,
-        List<Object> hullsPlayed,
+        List<Equipment> hullsPlayed,
         int kills,
         List<GameMode> modesPlayed,
         String name,
-        List<Object> paintsPlayed,
-        List<Object> presents,
-        Ratings previousRating,
+        List<Equipment> paintsPlayed,
+        List<Present> presents,
+        WeeklyRatings previousRating,
         int rank,
-        Ratings rating,
-        List<Object> resistanceModules,
+        WeeklyRatings rating,
+        List<Equipment> resistanceModules,
         int score,
         int scoreBase,
         int scoreNext,
         List<Supply> suppliesUsage,
-        List<Turret> turretsPlayed
+        List<Equipment> turretsPlayed
 ) {}
 
 record TankiRatingsApiResponse(ResponseJsonObj response, HttpResponseType responseType) {}
@@ -97,101 +99,144 @@ public class Tanki extends Cmd {
             embed.addField("Deaths", Util.thousandsSep(resp.deaths()), true);
             embed.addField("K/D", Util.decFmt.format(resp.kills()*1.0/resp.deaths()), true);
             embed.addField("Hours in game", Util.thousandsSep(getHours(resp.modesPlayed())), true);
-            embed.addField("Efficiency", Util.thousandsSep(resp.rating().efficiency().value()/100), true);
+            int eff = resp.rating().efficiency().value()/100;
+            embed.addField("Efficiency", eff < 1 ? "-" : Util.thousandsSep(eff), true);
             embed.addField("Total Crystals Earned", Util.thousandsSep(resp.earnedCrystals()), true);
             embed.addField("Golds Caught", Util.thousandsSep(resp.caughtGolds()), true);
-            embed.addField("Supplies Used", Util.thousandsSep(getSuppliesUsed(resp.suppliesUsage())), true);
+            embed.addField("Total Supplies Used", Util.thousandsSep(getTotalSuppliesUsed(resp.suppliesUsage())), true);
             embed.addField("Gear Score", "**"+resp.gearScore()+"**", true);
 
-            embed.addField("", "**__Equipment/Gear__**", false);
-            embed.addField("Favourite Turret", getFavTurret(resp.turretsPlayed()), true);
+            embed.addField("", "**__Most Used Equipment/Gear__**", false);
+            if (!resp.turretsPlayed().isEmpty())
+                embed.addField("Turret", getFavEquipment(resp.turretsPlayed()), true);
+            if (!resp.hullsPlayed().isEmpty())
+                embed.addField("Hull", getFavEquipment(resp.hullsPlayed()), true);
+            if (!resp.dronesPlayed().isEmpty())
+                embed.addField("Drone", getFavEquipment(resp.dronesPlayed()), true);
+            if (!resp.resistanceModules().isEmpty())
+                embed.addField("Module", getFavEquipment(resp.resistanceModules()), true);
+            if (!resp.paintsPlayed().isEmpty())
+                embed.addField("Paint", getFavEquipment(resp.paintsPlayed()), true);
+            if (!resp.suppliesUsage().isEmpty())
+                embed.addField("Supply", getFavSupply(resp.suppliesUsage()), true);
+
+            embed.addField("", "**__Other__**", false);
+            if (!resp.modesPlayed().isEmpty())
+                embed.addField("Favourite Game Mode", getFavMode(resp.modesPlayed()), true);
+            if (!resp.presents().isEmpty())
+                embed.addField("Gifts", getGiftsInfo(resp.presents()), true);
 
             embed.setFooter("View on desktop for better embed formatting");
 
-            if (resp.hasPremium()) {
+            if (resp.hasPremium())
                 embed.setColor(0xfbd003);
-            }
         }
         event.replyEmbeds(embed.build()).queue();
     }
 
-    private String getFavTurret(List<Turret> turrets) {
-        Map<String, Long> turretVsTimePlayed = new HashMap<>();
-        for (Turret turret : turrets)
-            turretVsTimePlayed.put(turret.name(), turretVsTimePlayed.getOrDefault(turret.name(), 0L)+turret.timePlayed());
+    private String getGiftsInfo(List<Present> presents) {
+        int total = presents.stream().mapToInt(Present::count).sum();
 
-        long max = turretVsTimePlayed.values().stream().mapToLong(i -> i).max().getAsLong();
-        for (Map.Entry<String, Long> entry : turretVsTimePlayed.entrySet()) {
-            String turret = entry.getKey();
+        Present popularGift = presents.getFirst();
+        for (Present present : presents)
+            if (present.count() > popularGift.count())
+                popularGift = present;
+
+        String name = popularGift.name();
+        int count = popularGift.count();
+        return String.format("%s - %d received, %d total gifts received", name, count, total);
+    }
+
+    private String getFavMode(List<GameMode> gameModes) {
+        GameMode favMode = gameModes.getFirst();
+        for (GameMode mode : gameModes)
+            if (mode.timePlayed() > favMode.timePlayed())
+                favMode = mode;
+
+        String name = favMode.name();
+        String type = favMode.type();
+        double hours = favMode.timePlayed() / 3600.0 / 1000;
+        String xp = Util.thousandsSep(favMode.scoreEarned());
+        return String.format("%s (%s) - %.1f hours, %s XP", name, type, hours, xp);
+    }
+
+    private String getFavEquipment(List<Equipment> equipment) {
+        Map<Equipment, Long> timePlayedPerEq = new HashMap<>();
+        for (Equipment eq : equipment)
+            timePlayedPerEq.put(eq, timePlayedPerEq.getOrDefault(eq, 0L)+eq.timePlayed());
+
+        Equipment favEq = equipment.getFirst();
+        for (Map.Entry<Equipment, Long> entry : timePlayedPerEq.entrySet()) {
+            Equipment eq = entry.getKey();
             long timePlayedMillis = entry.getValue();
 
-            if (timePlayedMillis == max)
-                return String.format("%s, %.1f hours", turret, timePlayedMillis / 3600.0 / 1000);
+            if (timePlayedMillis > favEq.timePlayed())
+                favEq = eq;
         }
 
-        return "";
+        String name = favEq.name();
+        double hours = favEq.timePlayed() / 3600.0 / 1000;
+        String xp = Util.thousandsSep(favEq.scoreEarned());
+        return String.format("%s - %.1f hours, %s XP", name, hours, xp);
     }
 
     private String getWeeklyRatingsTable(ResponseJsonObj resp) {
-        Ratings ratings = resp.rating();
-        if (ratings == null)
+        WeeklyRatings weeklyRatings = resp.rating();
+        if (weeklyRatings == null)
             return "No weekly ratings; there might be previous ratings";
-        boolean hasPrevRatings = false;
-        Ratings prevRatings = resp.previousRating();
-        if (prevRatings != null)
-            hasPrevRatings = true;
 
-        Rating xp = ratings.score();
-        String xpPos = xp != null ? ("#"+Util.thousandsSep(xp.position())).replace("#-1", "-") : "-";
-        String xpVal = xp != null ? Util.thousandsSep(xp.value()).replace("-1", "-") : "-";
-        String xpPrev = "";
-        if (hasPrevRatings) {
-            Rating prevXp = prevRatings.score();
-            xpPrev = prevXp != null ? Util.thousandsSep(prevXp.value()).replace("-1", "-") : "-";
-        }
+        String[] xpRow = getRatingRow(weeklyRatings.score());
+        String[] gbRow = getRatingRow(weeklyRatings.golds());
+        String[] crRow = getRatingRow(weeklyRatings.crystals());
+        String[] efRow = getRatingRow(weeklyRatings.efficiency());
 
-        Rating gb = ratings.golds();
-        String gbPos = gb != null ? ("#"+Util.thousandsSep(gb.position())).replace("#-1", "-") : "-";
-        String gbVal = gb != null ? Util.thousandsSep(gb.value()).replace("-1", "-") : "-";
-        String gbPrev = "";
-        if (hasPrevRatings) {
-            Rating prevGb = prevRatings.golds();
-            gbPrev = prevGb != null ? Util.thousandsSep(prevGb.value()).replace("-1", "-") : "-";
-        }
-
-        Rating cr = ratings.crystals();
-        String crPos = cr != null ? ("#"+Util.thousandsSep(cr.position())).replace("#-1", "-") : "-";
-        String crVal = cr != null ? Util.thousandsSep(cr.value()).replace("-1", "-") : "-";
-        String crPrev = "";
-        if (hasPrevRatings) {
-            Rating prevCr = prevRatings.crystals();
-            crPrev = prevCr != null ? Util.thousandsSep(prevCr.value()).replace("-1", "-") : "-";
-        }
-
-        Rating ef = ratings.efficiency();
-        String efPos = ef != null ? ("#"+Util.thousandsSep(ef.position())).replace("#-1", "-") : "-";
-        String efVal = ef != null ? Util.thousandsSep(Math.round(ef.value()/100.0)).replace("-1", "-") : "-";
-        String efPrev = "";
-        if (hasPrevRatings) {
-            Rating prevEf = prevRatings.efficiency();
-            efPrev = prevEf != null ? Util.thousandsSep(Math.round(prevEf.value()/100.0)).replace("-1", "-") : "-";
+        WeeklyRatings prevWeeklyRatings = resp.previousRating();
+        String prevXp = "-", prevGb = "-", prevCr = "-", prevEf = "-";
+        if (prevWeeklyRatings != null) {
+            prevXp = getPrevRating(prevWeeklyRatings.score());
+            prevGb = getPrevRating(prevWeeklyRatings.golds());
+            prevCr = getPrevRating(prevWeeklyRatings.crystals());
+            prevEf = getPrevRating(prevWeeklyRatings.efficiency());
         }
 
         return String.format("""
-                    ```java
+                    ```javascript
                     Rating     |      Place |      Value |  Previously
                     --------------------------------------------------
                     Experience | %10s | %10s | %10s
                     Gold Boxes | %10s | %10s | %10s
                     Crystals   | %10s | %10s | %10s
                     Efficiency | %10s | %10s | %10s
-                    ```""", xpPos, xpVal, xpPrev,
-                            gbPos, gbVal, gbPrev,
-                            crPos, crVal, crPrev,
-                            efPos, efVal, efPrev);
+                    ```""", xpRow[0], xpRow[1], prevXp,
+                            gbRow[0], gbRow[1], prevGb,
+                            crRow[0], crRow[1], prevCr,
+                            efRow[0], efRow[1], prevEf);
+    }
+
+    private String[] getRatingRow(Rating rating) {
+        String pos = "-", val = "-";
+        if (rating != null) {
+            if (rating.position() > 0)
+                pos = ("#"+Util.thousandsSep(rating.position()));
+            if (rating.value() > 0)
+                val = Util.thousandsSep(rating.value());
+        }
+        return new String[]{pos, val};
+    }
+
+    private String getPrevRating(Rating prevRating) {
+        String prev = "-";
+        if (prevRating != null) {
+            if (prevRating.value() < 1)
+                return prev;
+            prev = Util.thousandsSep(prevRating.value());
+        }
+        return prev;
     }
 
     private long getHours(List<GameMode> modes) {
+        if (modes.isEmpty())
+            return 0;
         return Util.millisToHours(modes.stream().mapToLong(GameMode::timePlayed).sum());
     }
 
@@ -202,7 +247,17 @@ public class Tanki extends Cmd {
         return "Legend " + (rawRank - rankNames.length + 1);
     }
 
-    private int getSuppliesUsed(List<Supply> supplies) {
+    private int getTotalSuppliesUsed(List<Supply> supplies) {
+        if (supplies.isEmpty())
+            return 0;
         return supplies.stream().mapToInt(Supply::usages).sum();
+    }
+
+    private String getFavSupply(List<Supply> supplies) {
+        Supply mostUsed = supplies.getFirst();
+        for (Supply supply : supplies)
+            if (supply.usages() > mostUsed.usages())
+                mostUsed = supply;
+        return String.format("%s, %s used", mostUsed.name(), Util.thousandsSep(mostUsed.usages()));
     }
 }
