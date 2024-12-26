@@ -1,6 +1,7 @@
 package org.zahin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.dv8tion.jda.api.OnlineStatus;
 import org.zahin.cmd.*;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.db.DatabaseLoader;
@@ -57,9 +58,9 @@ public class Bot extends ListenerAdapter {
                     List.of(new CmdOption(STRING, "c", "...", true)),
                     true, false), new Eval(dotenv),
 
-            new CmdData("tanki", "View a Tanki Online player's ratings",
-                    List.of(new CmdOption(STRING, "player", "The player to view", true)),
-                    true, true), new Tanki(objectMapper)
+            new CmdData("t", "...",
+                    List.of(new CmdOption(STRING, "p", "...", true)),
+                    true, false), new Tanki(objectMapper, dotenv)
     );
 
     public static void main(String[] args) {
@@ -77,6 +78,7 @@ public class Bot extends ListenerAdapter {
         log.info("Registered slash commands");
 
         jda.getPresence().setActivity(Activity.customStatus("Observing citizens of "+dotenv.get("MAIN_SERVER")));
+        jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
     }
 
     private static List<SlashCommandData> getSlashCommands() {

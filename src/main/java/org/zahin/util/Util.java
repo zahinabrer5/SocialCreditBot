@@ -10,15 +10,21 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 public class Util {
-    public static NumberFormat numFmt = new DecimalFormat("+#;-#");
-    public static DecimalFormat decFmt = new DecimalFormat("##.00");
+    public static NumberFormat plusMinusNumFmt = new DecimalFormat("+#;-#");
+    public static DecimalFormat decFmt = new DecimalFormat("#0.00");
+
+    public static String thousandsSep(long n) {
+        return thousandsSep(n, ' ');
+    }
+
+    public static String thousandsSep(long n, char sep) {
+        return String.format(Locale.US, "%,d", n).replace(',', sep);
+    }
 
     public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
         List<Entry<K, V>> list = new ArrayList<>(map.entrySet());

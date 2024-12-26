@@ -1,13 +1,12 @@
 package org.zahin.cmd;
 
-import org.zahin.db.DatabaseHandler;
 import io.github.cdimascio.dotenv.Dotenv;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import org.zahin.db.DatabaseHandler;
+import org.zahin.util.CustomEmbed;
 
 import java.math.BigInteger;
-import java.time.Instant;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -35,23 +34,21 @@ public class Leaderboard extends Cmd {
             return;
         }
 
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setAuthor(dotenv.get("BOT_NAME"));
-        eb.setTitle("Top "+max+" Best Citizens of "+dotenv.get("MAIN_SERVER"));
-        eb.setTimestamp(Instant.now());
-        eb.setColor(0xfcdb00);
+        CustomEmbed embed = new CustomEmbed(dotenv);
+        embed.setTitle("Top "+max+" Best Citizens of "+dotenv.get("MAIN_SERVER"));
+        embed.setColor(0xfcdb00);
 
-        StringBuilder description = new StringBuilder();
         Map<String, BigInteger> ranking = dbHandler.getRanking();
         int i = 1;
         Iterator<Map.Entry<String, BigInteger>> it = ranking.entrySet().iterator();
         while (it.hasNext() && i <= max) {
             Map.Entry<String, BigInteger> entry = it.next();
-            description.append(String.format("%d. <@%s>: **%d** social credit%n", i, entry.getKey(), entry.getValue()));
+            embed.appendDescription(String.format("%d. <@%s>: **%d** social credit%n", i, entry.getKey(), entry.getValue()));
             i++;
         }
-        eb.setDescription(description);
 
-        event.replyEmbeds(eb.build()).queue();
+        event.replyEmbeds(embed.build()).queue();
+
+        // ToDo: fix user IDs not showing profile on Discord ("You don't have access to this link")
     }
 }

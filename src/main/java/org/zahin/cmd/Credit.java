@@ -1,15 +1,14 @@
 package org.zahin.cmd;
 
-import org.zahin.db.DatabaseHandler;
 import io.github.cdimascio.dotenv.Dotenv;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import org.zahin.db.DatabaseHandler;
+import org.zahin.util.CustomEmbed;
 import org.zahin.util.Util;
 
 import java.math.BigInteger;
-import java.time.Instant;
 
 public class Credit extends Cmd {
     private final DatabaseHandler dbHandler;
@@ -46,11 +45,9 @@ public class Credit extends Cmd {
         dbHandler.update(userId, amount);
         BigInteger balance = dbHandler.read(userId).balance();
 
-        EmbedBuilder eb = new EmbedBuilder();
-        eb.setAuthor(dotenv.get("BOT_NAME"));
-        eb.setTitle(Util.numFmt.format(amount)+" social credit!");
-        eb.setDescription(String.format("%s<@%s> now has **%d** social credit", reason, userId, balance));
-        eb.setTimestamp(Instant.now());
+        CustomEmbed embed = new CustomEmbed(dotenv);
+        embed.setTitle(Util.plusMinusNumFmt.format(amount)+" social credit!");
+        embed.setDescription(String.format("%s<@%s> now has **%d** social credit", reason, userId, balance));
 
         String img = "https://i.imgur.com/HsM6YU1.png";
         int colour = 0x2eb33e;
@@ -58,9 +55,9 @@ public class Credit extends Cmd {
             img = "https://i.imgur.com/l4sQ8lV.png";
             colour = 0xff0000;
         }
-        eb.setThumbnail(img);
-        eb.setColor(colour);
+        embed.setThumbnail(img);
+        embed.setColor(colour);
 
-        event.replyEmbeds(eb.build()).queue();
+        event.replyEmbeds(embed.build()).queue();
     }
 }

@@ -49,7 +49,7 @@ public class Cat extends Cmd {
             }
 
             int colour = Util.mostCommonColour(Util.urlToImage(retrievedCatUrl));
-            embed.setColour(colour);
+            embed.setColor(colour);
 
             if (retrievedCatUrl.isEmpty()) {
                 InputStream contingencyCat = getClass().getResourceAsStream("/img/tabby.jpg");
