@@ -122,4 +122,8 @@ public class Util {
             throw new RuntimeException(e);
         }
     }
+
+    public static long millisToHours(long millis) {
+        return Math.round(millis / 3600.0 / 1000);
+    }
 }
