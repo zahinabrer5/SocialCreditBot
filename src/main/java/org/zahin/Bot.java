@@ -61,6 +61,8 @@ public class Bot extends ListenerAdapter {
             new CmdData("t", "...",
                     List.of(new CmdOption(STRING, "p", "...", true)),
                     true, false), new Tanki(objectMapper, dotenv)
+
+            // ToDo: /daily, /rob
     );
 
     public static void main(String[] args) {

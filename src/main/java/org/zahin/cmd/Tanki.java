@@ -191,9 +191,17 @@ public class Tanki extends Cmd {
         }
 
         String name = favEq.name();
-        double hours = favEq.timePlayed() / 3600.0 / 1000;
+        String hours = Util.oneDecFmt.format(favEq.timePlayed() / 3600.0 / 1000);
         String xp = Util.thousandsSep(favEq.scoreEarned());
-        return String.format("%s - %s hours, %s XP", name, Util.oneDecFmt.format(hours), xp);
+
+        if (equipment.getFirst().grade() < 0)
+            return String.format("%s - %s hours, %s XP", name, hours, xp);
+
+        int grade = equipment.stream()
+                .filter(eq -> eq.name().equals(name))
+                .mapToInt(Equipment::grade)
+                .max().getAsInt() + 1;
+        return String.format("%s Mk%d - %s hours, %s XP", name, grade, hours, xp);
     }
 
     private String getWeeklyRatingsTable(ResponseJsonObj resp) {
