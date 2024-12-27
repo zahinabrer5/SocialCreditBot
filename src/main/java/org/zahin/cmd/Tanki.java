@@ -209,18 +209,18 @@ public class Tanki extends Cmd {
         if (weeklyRatings == null)
             return "No weekly ratings; there might be previous ratings";
 
-        String[] xpRow = getRatingRow(weeklyRatings.score());
-        String[] gbRow = getRatingRow(weeklyRatings.golds());
-        String[] crRow = getRatingRow(weeklyRatings.crystals());
-        String[] efRow = getRatingRow(weeklyRatings.efficiency());
+        String[] xpRow = getRatingRow(weeklyRatings.score(), false);
+        String[] gbRow = getRatingRow(weeklyRatings.golds(), false);
+        String[] crRow = getRatingRow(weeklyRatings.crystals(), false);
+        String[] efRow = getRatingRow(weeklyRatings.efficiency(), true);
 
         WeeklyRatings prevWeeklyRatings = resp.previousRating();
         String prevXp = "-", prevGb = "-", prevCr = "-", prevEf = "-";
         if (prevWeeklyRatings != null) {
-            prevXp = getPrevRating(prevWeeklyRatings.score());
-            prevGb = getPrevRating(prevWeeklyRatings.golds());
-            prevCr = getPrevRating(prevWeeklyRatings.crystals());
-            prevEf = getPrevRating(prevWeeklyRatings.efficiency());
+            prevXp = getPrevRating(prevWeeklyRatings.score(), false);
+            prevGb = getPrevRating(prevWeeklyRatings.golds(), false);
+            prevCr = getPrevRating(prevWeeklyRatings.crystals(), false);
+            prevEf = getPrevRating(prevWeeklyRatings.efficiency(), true);
         }
 
         return String.format("""
@@ -237,23 +237,26 @@ public class Tanki extends Cmd {
                             efRow[0], efRow[1], prevEf);
     }
 
-    private String[] getRatingRow(Rating rating) {
+    private String[] getRatingRow(Rating rating, boolean ef) {
         String pos = "-", val = "-";
         if (rating != null) {
             if (rating.position() > 0)
                 pos = ("#"+Util.thousandsSep(rating.position()));
-            if (rating.value() > 0)
-                val = Util.thousandsSep(rating.value());
+            if (rating.value() > 0) {
+                long valAsLong = ef ? Math.round(rating.value()/100.0) : rating.value();
+                val = Util.thousandsSep(valAsLong);
+            }
         }
         return new String[]{pos, val};
     }
 
-    private String getPrevRating(Rating prevRating) {
+    private String getPrevRating(Rating prevRating, boolean ef) {
         String prev = "-";
         if (prevRating != null) {
             if (prevRating.value() < 1)
                 return prev;
-            prev = Util.thousandsSep(prevRating.value());
+            long prevAsLong = ef ? Math.round(prevRating.value()/100.0) : prevRating.value();
+            prev = Util.thousandsSep(prevAsLong);
         }
         return prev;
     }
