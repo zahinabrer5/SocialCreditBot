@@ -33,6 +33,10 @@ public class Leaderboard extends Cmd {
             event.reply("`max` option must be at least 1!").setEphemeral(true).queue();
             return;
         }
+        if (max > 20) {
+            event.reply("`max` option can be at most 20!").setEphemeral(true).queue();
+            return;
+        }
 
         CustomEmbed embed = new CustomEmbed(dotenv);
         embed.setTitle("Top "+max+" Best Citizens of "+dotenv.get("MAIN_SERVER"));

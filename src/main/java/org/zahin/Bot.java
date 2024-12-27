@@ -38,7 +38,7 @@ public class Bot extends ListenerAdapter {
                     true, false), new Credit(dbHandler, dotenv),
 
             new CmdData("leaderboard", "View social credit rankings",
-                    List.of(new CmdOption(INTEGER, "max", "Number of users to display. If not provided, defaults to 10", false)),
+                    List.of(new CmdOption(INTEGER, "max", "Number of users (1 to 20) to display. If not provided, defaults to 10", false)),
                     true, true), new Leaderboard(dbHandler, dotenv),
 
             new CmdData("profile", "View a user's social credit stats",

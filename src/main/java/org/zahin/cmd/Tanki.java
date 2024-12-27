@@ -113,7 +113,7 @@ public class Tanki extends Cmd {
             embed.addField("Deaths", Util.thousandsSep(resp.deaths()), true);
             embed.addField("K/D", Util.twoDecFmt.format(resp.kills()*1.0/resp.deaths()), true);
             embed.addField("Hours in game", Util.thousandsSep(getHours(resp.modesPlayed())), true);
-            int eff = resp.rating().efficiency().value()/100;
+            long eff = Math.round(resp.rating().efficiency().value()/100.0);
             embed.addField("Efficiency", eff < 1 ? "-" : Util.thousandsSep(eff), true);
             embed.addField("Total Crystals Earned", Util.thousandsSep(resp.earnedCrystals()), true);
             embed.addField("Golds Caught", Util.thousandsSep(resp.caughtGolds()), true);
