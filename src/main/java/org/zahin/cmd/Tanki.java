@@ -5,6 +5,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.jetbrains.annotations.NotNull;
 import org.zahin.util.CustomEmbed;
 import org.zahin.util.HttpResponseType;
 import org.zahin.util.Util;
@@ -12,6 +13,7 @@ import org.zahin.util.Util;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -74,80 +76,97 @@ public class Tanki extends Cmd {
 
     private void tanki(SlashCommandInteractionEvent event, String player) {
         String url = "https://ratings.tankionline.com/api/eu/profile/?user="+player+"&lang=en";
+
+        int code = 0;
+        try {
+            code = ((HttpURLConnection) new URI(url).toURL().openConnection()).getResponseCode();
+        } catch (URISyntaxException | IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (code != HttpURLConnection.HTTP_OK) {
+            errorEmbed(event, code);
+            return;
+        }
+
         TankiRatingsApiResponse apiResponse;
         try {
             apiResponse = objectMapper.readValue(new URI(url).toURL(), TankiRatingsApiResponse.class);
         } catch (URISyntaxException | IOException e) {
             throw new RuntimeException(e);
         }
+        if (apiResponse.response() == null || !apiResponse.responseType().status().equals("OK")) {
+            errorEmbed(event, apiResponse.responseType().statusCode());
+            return;
+        }
+
+        ResponseJsonObj resp = apiResponse.response();
 
         CustomEmbed embed = new CustomEmbed(dotenv);
-        if (apiResponse.response() == null || !apiResponse.responseType().status().equals("OK")) {
-            embed.setTitle("Could not fetch player stats!");
-            embed.setDescription("Make sure the player actually exists...");
-            embed.setImage("https://http.cat/"+apiResponse.responseType().statusCode());
-            embed.setColor(Color.BLACK);
-            event.replyEmbeds(embed.build()).queue();
+        embed.setTitle(getRank(resp.rank())+" "+resp.name());
+        embed.setUrl("https://ratings.tankionline.com/en/user/"+resp.name());
+        embed.setDescription(String.format("%s / %s XP", Util.thousandsSep(resp.score()), Util.thousandsSep(resp.scoreNext())));
+        embed.setColor(0x036530);
+
+        CustomEmbed weeklyRatings = new CustomEmbed(dotenv);
+        weeklyRatings.addField("__Weekly Ratings__", getWeeklyRatingsTable(resp), false);
+        weeklyRatings.setFooter("See next message (embed) for rest of stats");
+        weeklyRatings.setColor(0x036530);
+
+        if (resp.hasPremium()) {
+            embed.setColor(0xfbd003);
+            weeklyRatings.setColor(0xfbd003);
         }
-        else {
-            ResponseJsonObj resp = apiResponse.response();
-            embed.setTitle(getRank(resp.rank())+" "+resp.name());
-            embed.setUrl("https://ratings.tankionline.com/en/user/"+resp.name());
-            embed.setDescription(String.format("%s / %s XP", Util.thousandsSep(resp.score()), Util.thousandsSep(resp.scoreNext())));
-            embed.setColor(0x036530);
 
-            CustomEmbed weeklyRatings = new CustomEmbed(dotenv);
-            weeklyRatings.addField("__Weekly Ratings__", getWeeklyRatingsTable(resp), false);
-            weeklyRatings.setFooter("See next message (embed) for rest of stats");
-            weeklyRatings.setColor(0x036530);
+        event.replyEmbeds(weeklyRatings.build()).queue();
 
-            if (resp.hasPremium()) {
-                embed.setColor(0xfbd003);
-                weeklyRatings.setColor(0xfbd003);
-            }
+        embed.addField("", "**__Profile__**", false);
+        embed.addField("Kills", Util.thousandsSep(resp.kills()), true);
+        embed.addField("Deaths", Util.thousandsSep(resp.deaths()), true);
+        embed.addField("K/D", Util.twoDecFmt.format(resp.kills()*1.0/resp.deaths()), true);
+        embed.addField("Hours in game", Util.thousandsSep(getHours(resp.modesPlayed())), true);
+        long eff = Math.round(resp.rating().efficiency().value()/100.0);
+        embed.addField("Efficiency", eff < 1 ? "-" : Util.thousandsSep(eff), true);
+        embed.addField("Total Crystals Earned", Util.thousandsSep(resp.earnedCrystals()), true);
+        embed.addField("Golds Caught", Util.thousandsSep(resp.caughtGolds()), true);
+        embed.addField("Total Supplies Used", Util.thousandsSep(getTotalSuppliesUsed(resp.suppliesUsage())), true);
+        embed.addField("Gear Score", "**"+resp.gearScore()+"**", true);
 
-            event.replyEmbeds(weeklyRatings.build()).queue();
+        embed.addField("", "**__Most Used Equipment/Gear__**", false);
+        if (!resp.turretsPlayed().isEmpty())
+            embed.addField("Turret", getFavEquipment(resp.turretsPlayed()), true);
+        if (!resp.hullsPlayed().isEmpty())
+            embed.addField("Hull", getFavEquipment(resp.hullsPlayed()), true);
+        if (!resp.dronesPlayed().isEmpty())
+            embed.addField("Drone", getFavEquipment(resp.dronesPlayed()), true);
+        if (!resp.resistanceModules().isEmpty())
+            embed.addField("Module", getFavEquipment(resp.resistanceModules()), true);
+        if (!resp.paintsPlayed().isEmpty())
+            embed.addField("Paint", getFavEquipment(resp.paintsPlayed()), true);
+        if (!resp.suppliesUsage().isEmpty())
+            embed.addField("Supply", getFavSupply(resp.suppliesUsage()), true);
 
-            embed.addField("", "**__Profile__**", false);
-            embed.addField("Kills", Util.thousandsSep(resp.kills()), true);
-            embed.addField("Deaths", Util.thousandsSep(resp.deaths()), true);
-            embed.addField("K/D", Util.twoDecFmt.format(resp.kills()*1.0/resp.deaths()), true);
-            embed.addField("Hours in game", Util.thousandsSep(getHours(resp.modesPlayed())), true);
-            long eff = Math.round(resp.rating().efficiency().value()/100.0);
-            embed.addField("Efficiency", eff < 1 ? "-" : Util.thousandsSep(eff), true);
-            embed.addField("Total Crystals Earned", Util.thousandsSep(resp.earnedCrystals()), true);
-            embed.addField("Golds Caught", Util.thousandsSep(resp.caughtGolds()), true);
-            embed.addField("Total Supplies Used", Util.thousandsSep(getTotalSuppliesUsed(resp.suppliesUsage())), true);
-            embed.addField("Gear Score", "**"+resp.gearScore()+"**", true);
+        embed.addField("", "**__Other__**", false);
+        if (!resp.modesPlayed().isEmpty())
+            embed.addField("Favourite Game Mode", getFavMode(resp.modesPlayed()), true);
+        if (!resp.presents().isEmpty())
+            embed.addField("Gifts", getGiftsInfo(resp.presents()), true);
 
-            embed.addField("", "**__Most Used Equipment/Gear__**", false);
-            if (!resp.turretsPlayed().isEmpty())
-                embed.addField("Turret", getFavEquipment(resp.turretsPlayed()), true);
-            if (!resp.hullsPlayed().isEmpty())
-                embed.addField("Hull", getFavEquipment(resp.hullsPlayed()), true);
-            if (!resp.dronesPlayed().isEmpty())
-                embed.addField("Drone", getFavEquipment(resp.dronesPlayed()), true);
-            if (!resp.resistanceModules().isEmpty())
-                embed.addField("Module", getFavEquipment(resp.resistanceModules()), true);
-            if (!resp.paintsPlayed().isEmpty())
-                embed.addField("Paint", getFavEquipment(resp.paintsPlayed()), true);
-            if (!resp.suppliesUsage().isEmpty())
-                embed.addField("Supply", getFavSupply(resp.suppliesUsage()), true);
+        embed.setFooter("View on desktop for better embed formatting");
 
-            embed.addField("", "**__Other__**", false);
-            if (!resp.modesPlayed().isEmpty())
-                embed.addField("Favourite Game Mode", getFavMode(resp.modesPlayed()), true);
-            if (!resp.presents().isEmpty())
-                embed.addField("Gifts", getGiftsInfo(resp.presents()), true);
+        MessageChannel channel = event.getMessageChannel();
+        String file = String.format("/img/ranks/Icons%s_%01d.png", resp.hasPremium() ? "Premium" : "Normal", resp.rank());
+        InputStream rankIcon = getClass().getResourceAsStream(file);
+        embed.setThumbnail("attachment://rank.png");
+        channel.sendFiles(FileUpload.fromData(rankIcon, "rank.png")).setEmbeds(embed.build()).queue();
+    }
 
-            embed.setFooter("View on desktop for better embed formatting");
-
-            MessageChannel channel = event.getMessageChannel();
-            String file = String.format("/img/ranks/Icons%s_%01d.png", resp.hasPremium() ? "Premium" : "Normal", resp.rank());
-            InputStream rankIcon = getClass().getResourceAsStream(file);
-            embed.setThumbnail("attachment://rank.png");
-            channel.sendFiles(FileUpload.fromData(rankIcon, "rank.png")).setEmbeds(embed.build()).queue();
-        }
+    private void errorEmbed(SlashCommandInteractionEvent event, int code) {
+        CustomEmbed embed = new CustomEmbed(dotenv);
+        embed.setTitle("Could not fetch player stats!");
+        embed.setDescription("Make sure the player actually exists...");
+        embed.setImage("https://http.cat/"+code);
+        embed.setColor(Color.BLACK);
+        event.replyEmbeds(embed.build()).queue();
     }
 
     private String getGiftsInfo(List<Present> presents) {
@@ -177,16 +196,15 @@ public class Tanki extends Cmd {
     }
 
     private String getFavEquipment(List<Equipment> equipment) {
-        Map<Equipment, Long> timePlayedPerEq = new HashMap<>();
-        for (Equipment eq : equipment)
-            timePlayedPerEq.put(eq, timePlayedPerEq.getOrDefault(eq, 0L)+eq.timePlayed());
+        // get the unique turrets / hulls & zero their integral values (scoreEarned & timePlayed)
+        List<Equipment> uniq = equipment.stream().distinct().toList();
+        Map<String, Equipment> map = getEquipmentStatsMap(equipment, uniq);
 
         Equipment favEq = equipment.getFirst();
-        for (Map.Entry<Equipment, Long> entry : timePlayedPerEq.entrySet()) {
-            Equipment eq = entry.getKey();
-            long timePlayedMillis = entry.getValue();
+        for (Map.Entry<String, Equipment> entry : map.entrySet()) {
+            Equipment eq = entry.getValue();
 
-            if (timePlayedMillis > favEq.timePlayed())
+            if (eq.timePlayed() > favEq.timePlayed())
                 favEq = eq;
         }
 
@@ -202,6 +220,25 @@ public class Tanki extends Cmd {
                 .mapToInt(Equipment::grade)
                 .max().getAsInt() + 1;
         return String.format("%s Mk%d - %s hours, %s XP", name, grade, hours, xp);
+    }
+
+    @NotNull
+    private static Map<String, Equipment> getEquipmentStatsMap(List<Equipment> equipment, List<Equipment> uniq) {
+        Map<String, Equipment> map = new HashMap<>();
+        for (Equipment eq : uniq) {
+            Equipment zeroed = new Equipment(eq.grade(), eq.id(), eq.imageUrl(), eq.name(), eq.properties(), 0, 0);
+            map.put(zeroed.name(), zeroed);
+        }
+
+        // total turret / hull integral values
+        for (Equipment eq : equipment) {
+            Equipment eqCurr = map.get(eq.name());
+            Equipment eqNew = new Equipment(eq.grade(), eq.id(), eq.imageUrl(), eq.name(), eq.properties(),
+                    eqCurr.scoreEarned()+eq.scoreEarned(), eqCurr.timePlayed()+eq.timePlayed());
+            map.put(eqNew.name(), eqNew);
+        }
+
+        return map;
     }
 
     private String getWeeklyRatingsTable(ResponseJsonObj resp) {
