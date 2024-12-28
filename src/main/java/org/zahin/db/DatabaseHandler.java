@@ -62,12 +62,12 @@ public class DatabaseHandler {
         return userTable.get(id);
     }
 
-    public void update(String id, long amount) {
+    public void update(String id, BigInteger amount) {
         UserProfile profile = read(id);
-        BigInteger balance = profile.balance().add(BigInteger.valueOf(amount));
+        BigInteger balance = profile.balance().add(amount);
         int numGain = profile.numGain();
         int numLoss = profile.numLoss();
-        if (amount > 0)
+        if (amount.signum() > 0)
             numGain++;
         else
             numLoss++;

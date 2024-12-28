@@ -1,0 +1,65 @@
+package org.zahin;
+
+import io.github.cdimascio.dotenv.Dotenv;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.zahin.cmd.Cmd;
+import org.zahin.db.DatabaseHandler;
+import org.zahin.util.CustomEmbed;
+import org.zahin.util.Util;
+
+import java.math.BigInteger;
+import java.util.Random;
+
+public class Rob extends Cmd {
+    private final DatabaseHandler dbHandler;
+    private final Dotenv dotenv;
+
+    public Rob(DatabaseHandler dbHandler, Dotenv dotenv) {
+        this.dbHandler = dbHandler;
+        this.dotenv = dotenv;
+    }
+
+    @Override
+    public void run(SlashCommandInteractionEvent event) {
+        User user = event.getOption("user").getAsUser();
+        rob(event, user);
+    }
+
+    private void rob(SlashCommandInteractionEvent event, User user) {
+        String robberId = event.getUser().getId();
+        String victimId = user.getId();
+
+        if (robberId.equals(victimId)) {
+            event.reply("You can't rob from yourself, silly!").queue();
+            return;
+        }
+
+        if (victimId.equals(dotenv.get("OWNER_ID")) || victimId.equals(dotenv.get("DEV_ID"))) {
+            event.reply("You can't rob from these guys... NOOB").queue();
+            return;
+        }
+
+        BigInteger userCredits = dbHandler.read(user.getId()).balance();
+
+        BigInteger min = userCredits.divide(BigInteger.TWO).negate();
+        BigInteger amount = Util.randomBigInteger(min, userCredits, new Random());
+
+        dbHandler.update(event.getUser().getId(), amount);
+        dbHandler.update(user.getId(), amount.negate());
+
+        CustomEmbed embed = new CustomEmbed(dotenv);
+        embed.setTitle(String.format("%s just attempted to rob %s...", event.getUser().getName(), user.getName()));
+        if (amount.compareTo(BigInteger.ZERO) < 0) {
+            embed.setDescription(String.format("Instead, <@%s> got caught by <@%s> and had to pay them **%d** social credit!", robberId, victimId, amount.abs()));
+            embed.setColor(0xff0000);
+            embed.setThumbnail("https://i.imgur.com/l4sQ8lV.png");
+        }
+        else {
+            embed.setDescription(String.format("<@%s> successfully robbed **%d** social credit from <@%s>!", robberId, amount.abs(), victimId));
+            embed.setColor(0x2eb33e);
+            embed.setThumbnail("https://i.imgur.com/HsM6YU1.png");
+        }
+        event.replyEmbeds(embed.build()).queue();
+    }
+}

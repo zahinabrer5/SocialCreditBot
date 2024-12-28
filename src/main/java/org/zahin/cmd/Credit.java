@@ -29,11 +29,11 @@ public class Credit extends Cmd {
         OptionMapping reasonOption = event.getOption("reason");
         if (reasonOption != null)
             reason = reasonOption.getAsString();
-        credit(event, user, amount, reason);
+        credit(event, user, BigInteger.valueOf(amount), reason);
     }
 
-    private void credit(SlashCommandInteractionEvent event, User user, long amount, String reason) {
-        if (amount == 0) {
+    private void credit(SlashCommandInteractionEvent event, User user, BigInteger amount, String reason) {
+        if (amount.equals(BigInteger.ZERO)) {
             event.reply("`amount` cannot be 0 (zero)!").setEphemeral(true).queue();
             return;
         }
@@ -51,7 +51,7 @@ public class Credit extends Cmd {
 
         String img = "https://i.imgur.com/HsM6YU1.png";
         int colour = 0x2eb33e;
-        if (amount < 0) {
+        if (amount.signum() < 0) {
             img = "https://i.imgur.com/l4sQ8lV.png";
             colour = 0xff0000;
         }

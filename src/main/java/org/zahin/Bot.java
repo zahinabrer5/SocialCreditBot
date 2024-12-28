@@ -64,9 +64,13 @@ public class Bot extends ListenerAdapter {
 
             new CmdData("free_credits", "Get 9999 free credits!",
                     List.of(),
-                    true, true), new FreeCredits()
+                    true, true), new FreeCredits(),
 
-            // ToDo: /daily, /rob
+            new CmdData("rob", "Rob credits from someone else (there's a chance that they catch you in the act and rob you instead!)",
+                    List.of(new CmdOption(USER, "user", "User to (try to) rob from", true)),
+                    true, true), new Rob(dbHandler, dotenv)
+
+            // ToDo: /daily
     );
 
     public static void main(String[] args) {

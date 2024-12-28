@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
@@ -126,5 +127,13 @@ public class Util {
 
     public static long millisToHours(long millis) {
         return Math.round(millis / 3600.0 / 1000);
+    }
+
+    public static BigInteger randomBigInteger(BigInteger min, BigInteger max, Random rand) {
+        BigInteger randomNumber;
+        do {
+            randomNumber = min.add(new BigInteger(max.bitLength(), rand));
+        } while (randomNumber.compareTo(max) >= 0 || randomNumber.compareTo(min) <= 0);
+        return randomNumber;
     }
 }
