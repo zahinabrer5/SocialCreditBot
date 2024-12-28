@@ -109,7 +109,7 @@ public class Tanki extends Cmd {
 
         CustomEmbed weeklyRatings = new CustomEmbed(dotenv);
         weeklyRatings.addField("__Weekly Ratings__", getWeeklyRatingsTable(resp), false);
-        weeklyRatings.setFooter("See next message (embed) for rest of stats");
+        weeklyRatings.setFooter("View this embed in landscape mode if on mobile | See next message (embed) for rest of stats");
         weeklyRatings.setColor(0x036530);
 
         if (resp.hasPremium()) {
@@ -154,7 +154,8 @@ public class Tanki extends Cmd {
         embed.setFooter("View on desktop for better embed formatting");
 
         MessageChannel channel = event.getMessageChannel();
-        String file = String.format("/img/ranks/Icons%s_%01d.png", resp.hasPremium() ? "Premium" : "Normal", resp.rank());
+        int rank = Math.min(resp.rank(), 31);
+        String file = String.format("/img/ranks/Icons%s_%01d.png", resp.hasPremium() ? "Premium" : "Normal", rank);
         InputStream rankIcon = getClass().getResourceAsStream(file);
         embed.setThumbnail("attachment://rank.png");
         channel.sendFiles(FileUpload.fromData(rankIcon, "rank.png")).setEmbeds(embed.build()).queue();

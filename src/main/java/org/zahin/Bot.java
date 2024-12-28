@@ -60,7 +60,11 @@ public class Bot extends ListenerAdapter {
 
             new CmdData("t", "...",
                     List.of(new CmdOption(STRING, "p", "...", true)),
-                    true, false), new Tanki(objectMapper, dotenv)
+                    true, false), new Tanki(objectMapper, dotenv),
+
+            new CmdData("free_credits", "Get 9999 free credits!",
+                    List.of(),
+                    true, true), new FreeCredits()
 
             // ToDo: /daily, /rob
     );
