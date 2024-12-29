@@ -13,9 +13,7 @@ import org.zahin.util.Util;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,12 +73,18 @@ public class Tanki extends Cmd {
     }
 
     private void tanki(SlashCommandInteractionEvent event, String player) {
-        String url = "https://ratings.tankionline.com/api/eu/profile/?user="+player+"&lang=en";
-
-        int code = 0;
+        String urlStr = "https://ratings.tankionline.com/api/eu/profile/?user="+player+"&lang=en";
+        URL url;
         try {
-            code = ((HttpURLConnection) new URI(url).toURL().openConnection()).getResponseCode();
-        } catch (URISyntaxException | IOException e) {
+            url = new URI(urlStr).toURL();
+        } catch (URISyntaxException | MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+
+        int code;
+        try {
+            code = ((HttpURLConnection) url.openConnection()).getResponseCode();
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
         if (code != HttpURLConnection.HTTP_OK) {
@@ -90,8 +94,8 @@ public class Tanki extends Cmd {
 
         TankiRatingsApiResponse apiResponse;
         try {
-            apiResponse = objectMapper.readValue(new URI(url).toURL(), TankiRatingsApiResponse.class);
-        } catch (URISyntaxException | IOException e) {
+            apiResponse = objectMapper.readValue(url, TankiRatingsApiResponse.class);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
         if (apiResponse.response() == null || !apiResponse.responseType().status().equals("OK")) {

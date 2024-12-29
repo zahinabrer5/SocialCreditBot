@@ -99,7 +99,7 @@ public class Bot extends ListenerAdapter {
         commands.queue();
         log.info("Registered slash commands");
 
-        jda.getPresence().setActivity(Activity.customStatus("Observing citizens of "+dotenv.get("MAIN_SERVER")));
+        jda.getPresence().setActivity(Activity.customStatus("Observing citizens of " + dotenv.get("MAIN_SERVER")));
         jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
     }
 
