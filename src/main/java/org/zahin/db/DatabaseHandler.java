@@ -89,10 +89,12 @@ public class DatabaseHandler {
     }
 
     public LocalDate getLastDailyUse(String userId) {
+        read(userId);
         return userTable.get(userId).lastDaily();
     }
 
     public void setLastDailyUse(String userId, LocalDate date) {
+        read(userId);
         userTable.computeIfPresent(userId, (id, profile) -> new UserProfile(id, profile.balance(), profile.numGain(), profile.numLoss(), date));
     }
 }
