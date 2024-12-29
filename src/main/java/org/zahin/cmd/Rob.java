@@ -1,9 +1,8 @@
-package org.zahin;
+package org.zahin.cmd;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import org.zahin.cmd.Cmd;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.util.CustomEmbed;
 import org.zahin.util.Util;

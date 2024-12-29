@@ -18,19 +18,18 @@ import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 
 public class Bot extends ListenerAdapter {
+    public static long startTime;
+
     private static final Dotenv dotenv = Dotenv.load();
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"));
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Map<CmdData, Cmd> cmdMap = Map.of(
+    private static Map<CmdData, Cmd> cmdMap = Map.of(
             new CmdData("credit", "Add or subtract social credit from a user",
                     List.of(new CmdOption(USER, "user", "The user to add or subtract credit from", true),
                             new CmdOption(INTEGER, "amount", "Amount of credit to add or subtract", true),
@@ -68,15 +67,27 @@ public class Bot extends ListenerAdapter {
 
             new CmdData("rob", "Rob credits from someone else (there's a chance that they catch you in the act and rob you instead!)",
                     List.of(new CmdOption(USER, "user", "User to (try to) rob from", true)),
-                    true, true), new Rob(dbHandler, dotenv)
+                    true, true), new Rob(dbHandler, dotenv),
 
-            // ToDo: /daily
+            new CmdData("daily", "Claim your free daily credits! Timer resets at 12 AM EST",
+                    List.of(),
+                    true, true), new Daily(dbHandler, dotenv)
     );
 
     public static void main(String[] args) {
+        // hack to make cmdMap no longer immutable
+        cmdMap = new HashMap<>(cmdMap);
+        // add the 11th (& onwards) commands here, since Map::of only accepts at most 10 key-value pairs, apparently
+        cmdMap.put(
+                new CmdData("uptime", "Display how long I've been awake for",
+                        List.of(),
+                        true, true), new Uptime()
+        );
+
         JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), EnumSet.noneOf(GatewayIntent.class)) // slash commands don't need any intents
                 .addEventListeners(new Bot(), new DatabaseLoader(dbHandler))
                 .build();
+        startTime = System.nanoTime();
 
         // These commands might take a few minutes to be active after creation/update/delete
         CommandListUpdateAction commands = jda.updateCommands();

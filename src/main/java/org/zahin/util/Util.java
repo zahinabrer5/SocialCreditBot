@@ -28,6 +28,10 @@ public class Util {
         return String.format(Locale.US, "%,d", n).replace(',', sep);
     }
 
+    public static String pluralizer(String singular, String plural, long amount) {
+        return amount == 1 ? singular : plural;
+    }
+
     public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
         List<Entry<K, V>> list = new ArrayList<>(map.entrySet());
         list.sort(Entry.comparingByValue());
