@@ -13,10 +13,12 @@ import java.util.Random;
 public class Rob extends Cmd {
     private final DatabaseHandler dbHandler;
     private final Dotenv dotenv;
+    private final Random rand;
 
-    public Rob(DatabaseHandler dbHandler, Dotenv dotenv) {
+    public Rob(DatabaseHandler dbHandler, Dotenv dotenv, Random rand) {
         this.dbHandler = dbHandler;
         this.dotenv = dotenv;
+        this.rand = rand;
     }
 
     @Override
@@ -42,7 +44,7 @@ public class Rob extends Cmd {
         BigInteger userCredits = dbHandler.read(user.getId()).balance();
 
         BigInteger min = userCredits.divide(BigInteger.TWO).negate();
-        BigInteger amount = Util.randomBigInteger(min, userCredits, new Random());
+        BigInteger amount = Util.randomBigInteger(min, userCredits, rand);
 
         dbHandler.update(event.getUser().getId(), amount);
         dbHandler.update(user.getId(), amount.negate());

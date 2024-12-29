@@ -29,6 +29,7 @@ public class Bot extends ListenerAdapter {
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"));
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Random rand = new Random();
     private static Map<CmdData, Cmd> cmdMap = Map.of(
             new CmdData("credit", "Add or subtract social credit from a user",
                     List.of(new CmdOption(USER, "user", "The user to add or subtract credit from", true),
@@ -67,11 +68,11 @@ public class Bot extends ListenerAdapter {
 
             new CmdData("rob", "Rob credits from someone else (there's a chance that they catch you in the act and rob you instead!)",
                     List.of(new CmdOption(USER, "user", "User to (try to) rob from", true)),
-                    true, true), new Rob(dbHandler, dotenv),
+                    true, true), new Rob(dbHandler, dotenv, rand),
 
             new CmdData("daily", "Claim your free daily credits! Timer resets at 12 AM EST",
                     List.of(),
-                    true, true), new Daily(dbHandler, dotenv)
+                    true, true), new Daily(dbHandler, dotenv, rand)
     );
 
     public static void main(String[] args) {

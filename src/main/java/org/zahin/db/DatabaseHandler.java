@@ -4,6 +4,7 @@ import org.zahin.util.Util;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,7 +26,8 @@ public class DatabaseHandler {
                 BigInteger balance = new BigInteger(splitted[1]);
                 int numGain = Integer.parseInt(splitted[2]);
                 int numLoss = Integer.parseInt(splitted[3]);
-                UserProfile profile = new UserProfile(id, balance, numGain, numLoss);
+                LocalDate date = LocalDate.parse(splitted[4]);
+                UserProfile profile = new UserProfile(id, balance, numGain, numLoss, date);
                 userTable.put(id, profile);
             }
         } catch (IOException e) {
@@ -35,7 +37,7 @@ public class DatabaseHandler {
 
     public void saveDatabase() {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(databaseFile, false))) {
-            bw.write("User ID,Balance,Number of Gains,Number of Losses");
+            bw.write("User ID,Balance,Number of Gains,Number of Losses,Last date /daily used");
             bw.newLine();
             for (Map.Entry<String, UserProfile> entry : userTable.entrySet()) {
                 String id = entry.getKey();
@@ -47,6 +49,8 @@ public class DatabaseHandler {
                 bw.write(String.valueOf(profile.numGain()));
                 bw.write(",");
                 bw.write(String.valueOf(profile.numLoss()));
+                bw.write(",");
+                bw.write(profile.lastDaily().toString());
                 bw.newLine();
             }
         } catch (IOException e) {
@@ -56,7 +60,7 @@ public class DatabaseHandler {
 
     public UserProfile read(String id) {
         if (!userTable.containsKey(id)) {
-            UserProfile profile = new UserProfile(id, BigInteger.valueOf(100), 0, 0);
+            UserProfile profile = new UserProfile(id, BigInteger.valueOf(100), 0, 0, LocalDate.now().minusDays(1));
             userTable.put(id, profile);
         }
         return userTable.get(id);
@@ -71,7 +75,7 @@ public class DatabaseHandler {
             numGain++;
         else
             numLoss++;
-        UserProfile updatedProfile = new UserProfile(id, balance, numGain, numLoss);
+        UserProfile updatedProfile = new UserProfile(id, balance, numGain, numLoss, profile.lastDaily());
         userTable.put(id, updatedProfile);
         saveDatabase();
     }
@@ -82,5 +86,13 @@ public class DatabaseHandler {
         for (Map.Entry<String, UserProfile> entry : sorted.entrySet())
             result.put(entry.getKey(), entry.getValue().balance());
         return result;
+    }
+
+    public LocalDate getLastDailyUse(String userId) {
+        return userTable.get(userId).lastDaily();
+    }
+
+    public void setLastDailyUse(String userId, LocalDate date) {
+        userTable.computeIfPresent(userId, (id, profile) -> new UserProfile(id, profile.balance(), profile.numGain(), profile.numLoss(), date));
     }
 }
