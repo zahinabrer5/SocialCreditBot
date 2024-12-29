@@ -17,18 +17,26 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 
-record Rating(int position, int value) {}
+record Rating(int position, int value) {
+}
 
-record WeeklyRatings(Rating crystals, Rating efficiency, Rating golds, Rating score) {}
+record WeeklyRatings(Rating crystals, Rating efficiency, Rating golds, Rating score) {
+}
 
-record Supply(String id, String imageUrl, String name, int usages) {}
+record Supply(String id, String imageUrl, String name, int usages) {
+}
 
-record GameMode(String name, int scoreEarned, long timePlayed, String type) {}
+record GameMode(String name, int scoreEarned, long timePlayed, String type) {
+}
 
-record Equipment(int grade, String id, String imageUrl, String name, List<String> properties, int scoreEarned, long timePlayed) {}
+record Equipment(int grade, String id, String imageUrl, String name, List<String> properties, int scoreEarned,
+                 long timePlayed) {
+}
 
-record Present(int count, String imageUrl, String name, String prototypeId) {}
+record Present(int count, String imageUrl, String name, String prototypeId) {
+}
 
 record ResponseJsonObj(
         int caughtGolds,
@@ -52,28 +60,39 @@ record ResponseJsonObj(
         int scoreNext,
         List<Supply> suppliesUsage,
         List<Equipment> turretsPlayed
-) {}
+) {
+}
 
-record TankiRatingsApiResponse(ResponseJsonObj response, HttpResponseType responseType) {}
+record TankiRatingsApiResponse(ResponseJsonObj response, HttpResponseType responseType) {
+}
 
-public class Tanki extends Cmd {
+public class Tanki extends Cmd implements Runnable {
+    private static final String[] rankNames = {"Recruit", "Private", "Gefreiter", "Corporal", "Master Corporal", "Sergeant", "Staff Sergeant", "Master Sergeant", "First Sergeant", "Sergeant-Major", "Warrant Officer 1", "Warrant Officer 2", "Warrant Officer 3", "Warrant Officer 4", "Warrant Officer 5", "Third Lieutenant", "Second Lieutenant", "First Lieutenant", "Captain", "Major", "Lieutenant Colonel", "Colonel", "Brigadier", "Major General", "Lieutenant General", "General", "Marshal", "Field Marshal", "Commander", "Generalissimo", "Legend (1)"};
     private final ObjectMapper objectMapper;
     private final Dotenv dotenv;
-    private static final String[] rankNames = { "Recruit", "Private", "Gefreiter", "Corporal", "Master Corporal", "Sergeant", "Staff Sergeant", "Master Sergeant", "First Sergeant", "Sergeant-Major", "Warrant Officer 1", "Warrant Officer 2", "Warrant Officer 3", "Warrant Officer 4", "Warrant Officer 5", "Third Lieutenant", "Second Lieutenant", "First Lieutenant", "Captain", "Major", "Lieutenant Colonel", "Colonel", "Brigadier", "Major General", "Lieutenant General", "General", "Marshal", "Field Marshal", "Commander", "Generalissimo", "Legend (1)" };
+    private final ScheduledExecutorService scheduler;
+    private SlashCommandInteractionEvent event;
+    private String player;
 
-    public Tanki(ObjectMapper objectMapper, Dotenv dotenv) {
+    public Tanki(ObjectMapper objectMapper, Dotenv dotenv, ScheduledExecutorService scheduler) {
         this.objectMapper = objectMapper;
         this.dotenv = dotenv;
+        this.scheduler = scheduler;
     }
 
     @Override
     public void run(SlashCommandInteractionEvent event) {
-        String player = event.getOption("p").getAsString();
-        tanki(event, player);
+        player = event.getOption("p").getAsString();
+        scheduler.submit(this);
     }
 
-    private void tanki(SlashCommandInteractionEvent event, String player) {
-        String urlStr = "https://ratings.tankionline.com/api/eu/profile/?user="+player+"&lang=en";
+    @Override
+    public void run() {
+        tanki();
+    }
+
+    private void tanki() {
+        String urlStr = "https://ratings.tankionline.com/api/eu/profile/?user=" + player + "&lang=en";
         URL url;
         try {
             url = new URI(urlStr).toURL();
@@ -106,8 +125,8 @@ public class Tanki extends Cmd {
         ResponseJsonObj resp = apiResponse.response();
 
         CustomEmbed embed = new CustomEmbed(dotenv);
-        embed.setTitle(getRank(resp.rank())+" "+resp.name());
-        embed.setUrl("https://ratings.tankionline.com/en/user/"+resp.name());
+        embed.setTitle(getRank(resp.rank()) + " " + resp.name());
+        embed.setUrl("https://ratings.tankionline.com/en/user/" + resp.name());
         embed.setDescription(String.format("%s / %s XP", Util.thousandsSep(resp.score()), Util.thousandsSep(resp.scoreNext())));
         embed.setColor(0x036530);
 
@@ -126,14 +145,14 @@ public class Tanki extends Cmd {
         embed.addField("", "**__Profile__**", false);
         embed.addField("Kills", Util.thousandsSep(resp.kills()), true);
         embed.addField("Deaths", Util.thousandsSep(resp.deaths()), true);
-        embed.addField("K/D", Util.twoDecFmt.format(resp.kills()*1.0/resp.deaths()), true);
+        embed.addField("K/D", Util.twoDecFmt.format(resp.kills() * 1.0 / resp.deaths()), true);
         embed.addField("Hours in game", Util.thousandsSep(getHours(resp.modesPlayed())), true);
-        long eff = Math.round(resp.rating().efficiency().value()/100.0);
+        long eff = Math.round(resp.rating().efficiency().value() / 100.0);
         embed.addField("Efficiency", eff < 1 ? "-" : Util.thousandsSep(eff), true);
         embed.addField("Total Crystals Earned", Util.thousandsSep(resp.earnedCrystals()), true);
         embed.addField("Golds Caught", Util.thousandsSep(resp.caughtGolds()), true);
         embed.addField("Total Supplies Used", Util.thousandsSep(getTotalSuppliesUsed(resp.suppliesUsage())), true);
-        embed.addField("Gear Score", "**"+resp.gearScore()+"**", true);
+        embed.addField("Gear Score", "**" + resp.gearScore() + "**", true);
 
         embed.addField("", "**__Most Used Equipment/Gear__**", false);
         if (!resp.turretsPlayed().isEmpty())
@@ -169,7 +188,7 @@ public class Tanki extends Cmd {
         CustomEmbed embed = new CustomEmbed(dotenv);
         embed.setTitle("Could not fetch player stats!");
         embed.setDescription("Make sure the player actually exists...");
-        embed.setImage("https://http.cat/"+code);
+        embed.setImage("https://http.cat/" + code);
         embed.setColor(Color.BLACK);
         event.replyEmbeds(embed.build()).queue();
     }
@@ -239,7 +258,7 @@ public class Tanki extends Cmd {
         for (Equipment eq : equipment) {
             Equipment eqCurr = map.get(eq.name());
             Equipment eqNew = new Equipment(eq.grade(), eq.id(), eq.imageUrl(), eq.name(), eq.properties(),
-                    eqCurr.scoreEarned()+eq.scoreEarned(), eqCurr.timePlayed()+eq.timePlayed());
+                    eqCurr.scoreEarned() + eq.scoreEarned(), eqCurr.timePlayed() + eq.timePlayed());
             map.put(eqNew.name(), eqNew);
         }
 
@@ -266,26 +285,26 @@ public class Tanki extends Cmd {
         }
 
         return String.format("""
-                    ```javascript
-                    Rating     |      Place |      Value | Previously
-                    -------------------------------------------------
-                    Experience | %10s | %10s | %10s
-                    Gold Boxes | %10s | %10s | %10s
-                    Crystals   | %10s | %10s | %10s
-                    Efficiency | %10s | %10s | %10s
-                    ```""", xpRow[0], xpRow[1], prevXp,
-                            gbRow[0], gbRow[1], prevGb,
-                            crRow[0], crRow[1], prevCr,
-                            efRow[0], efRow[1], prevEf);
+                        ```javascript
+                        Rating     |      Place |      Value | Previously
+                        -------------------------------------------------
+                        Experience | %10s | %10s | %10s
+                        Gold Boxes | %10s | %10s | %10s
+                        Crystals   | %10s | %10s | %10s
+                        Efficiency | %10s | %10s | %10s
+                        ```""", xpRow[0], xpRow[1], prevXp,
+                gbRow[0], gbRow[1], prevGb,
+                crRow[0], crRow[1], prevCr,
+                efRow[0], efRow[1], prevEf);
     }
 
     private String[] getRatingRow(Rating rating, boolean ef) {
         String pos = "-", val = "-";
         if (rating != null) {
             if (rating.position() > 0)
-                pos = ("#"+Util.thousandsSep(rating.position()));
+                pos = ("#" + Util.thousandsSep(rating.position()));
             if (rating.value() > 0) {
-                long valAsLong = ef ? Math.round(rating.value()/100.0) : rating.value();
+                long valAsLong = ef ? Math.round(rating.value() / 100.0) : rating.value();
                 val = Util.thousandsSep(valAsLong);
             }
         }
@@ -297,7 +316,7 @@ public class Tanki extends Cmd {
         if (prevRating != null) {
             if (prevRating.value() < 1)
                 return prev;
-            long prevAsLong = ef ? Math.round(prevRating.value()/100.0) : prevRating.value();
+            long prevAsLong = ef ? Math.round(prevRating.value() / 100.0) : prevRating.value();
             prev = Util.thousandsSep(prevAsLong);
         }
         return prev;
@@ -311,7 +330,7 @@ public class Tanki extends Cmd {
 
     private String getRank(int rawRank) {
         if (rawRank <= rankNames.length)
-            return rankNames[rawRank-1];
+            return rankNames[rawRank - 1];
 
         return "Legend " + (rawRank - rankNames.length + 1);
     }

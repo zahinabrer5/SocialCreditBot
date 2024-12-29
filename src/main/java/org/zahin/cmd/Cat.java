@@ -10,24 +10,34 @@ import org.zahin.util.Util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ScheduledExecutorService;
 
-public class Cat extends Cmd {
+public class Cat extends Cmd implements Runnable {
     private final Dotenv dotenv;
     private final ObjectMapper objectMapper;
+    private final ScheduledExecutorService scheduler;
+    private SlashCommandInteractionEvent event;
 
-    public Cat(Dotenv dotenv, ObjectMapper objectMapper) {
+    public Cat(Dotenv dotenv, ObjectMapper objectMapper, ScheduledExecutorService scheduler) {
         this.dotenv = dotenv;
         this.objectMapper = objectMapper;
+        this.scheduler = scheduler;
     }
 
     @Override
     public void run(SlashCommandInteractionEvent event) {
-        cat(event);
+        this.event = event;
+        scheduler.submit(this);
     }
 
-    private void cat(SlashCommandInteractionEvent event) {
+    @Override
+    public void run() {
+        cat();
+    }
+
+    private void cat() {
         long start = System.nanoTime();
-        String url = "https://api.thecatapi.com/v1/images/search?api_key="+dotenv.get("CAT_API_KEY");
+        String url = "https://api.thecatapi.com/v1/images/search?api_key=" + dotenv.get("CAT_API_KEY");
 
         JsonNode node;
         try {
@@ -48,7 +58,7 @@ public class Cat extends Cmd {
         embed.setTitle("Cat(s) acquired:");
         // showing how long the operation took could be a security risk in a production environment...
         if (Boolean.parseBoolean(dotenv.get("ON_MAINTENANCE"))) {
-            embed.setFooter("Cat(s) acquired in "+Util.twoDecFmt.format(elapsed)+" ms");
+            embed.setFooter("Cat(s) acquired in " + Util.twoDecFmt.format(elapsed) + " ms");
         }
 
         int colour = Util.mostCommonColour(Util.urlToImage(retrievedCatUrl));

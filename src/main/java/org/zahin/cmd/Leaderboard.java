@@ -39,7 +39,7 @@ public class Leaderboard extends Cmd {
         }
 
         CustomEmbed embed = new CustomEmbed(dotenv);
-        embed.setTitle("Top "+max+" Best Citizens of "+dotenv.get("MAIN_SERVER"));
+        embed.setTitle("Top " + max + " Best Citizens of " + dotenv.get("MAIN_SERVER"));
         embed.setColor(0xfcdb00);
 
         Map<String, BigInteger> ranking = dbHandler.getRanking();

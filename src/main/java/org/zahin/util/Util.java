@@ -52,6 +52,7 @@ public class Util {
     }
 
     // https://stackoverflow.com/a/13605411/21405641
+
     /**
      * Converts a given Image into a BufferedImage
      *

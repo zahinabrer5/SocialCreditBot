@@ -46,7 +46,7 @@ public class Credit extends Cmd {
         BigInteger balance = dbHandler.read(userId).balance();
 
         CustomEmbed embed = new CustomEmbed(dotenv);
-        embed.setTitle(Util.plusMinusNumFmt.format(amount)+" social credit!");
+        embed.setTitle(Util.plusMinusNumFmt.format(amount) + " social credit!");
         embed.setDescription(String.format("%s<@%s> now has **%d** social credit", reason, userId, balance));
 
         String img = "https://i.imgur.com/HsM6YU1.png";

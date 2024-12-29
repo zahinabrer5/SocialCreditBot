@@ -55,8 +55,7 @@ public class Rob extends Cmd {
             embed.setDescription(String.format("Instead, <@%s> got caught by <@%s> and had to pay them **%d** social credit!", robberId, victimId, amount.abs()));
             embed.setColor(0xff0000);
             embed.setThumbnail("https://i.imgur.com/l4sQ8lV.png");
-        }
-        else {
+        } else {
             embed.setDescription(String.format("<@%s> successfully robbed **%d** social credit from <@%s>!", robberId, amount.abs(), victimId));
             embed.setColor(0x2eb33e);
             embed.setThumbnail("https://i.imgur.com/HsM6YU1.png");

@@ -1,13 +1,10 @@
 package org.zahin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.dv8tion.jda.api.OnlineStatus;
-import org.zahin.cmd.*;
-import org.zahin.db.DatabaseHandler;
-import org.zahin.db.DatabaseLoader;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -17,19 +14,24 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zahin.cmd.*;
+import org.zahin.db.DatabaseHandler;
+import org.zahin.db.DatabaseLoader;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 
 public class Bot extends ListenerAdapter {
     public static long startTime;
-
     private static final Dotenv dotenv = Dotenv.load();
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"));
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Random rand = new Random();
+    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static Map<CmdData, Cmd> cmdMap = Map.of(
             new CmdData("credit", "Add or subtract social credit from a user",
                     List.of(new CmdOption(USER, "user", "The user to add or subtract credit from", true),
@@ -45,14 +47,14 @@ public class Bot extends ListenerAdapter {
                     List.of(new CmdOption(USER, "user", "The user to view", true)),
                     true, true), new Profile(dbHandler, dotenv),
 
-            new CmdData("say", "Makes the bot say what you tell it to",
-                    List.of(new CmdOption(STRING, "content", "What the bot should say", true),
-                            new CmdOption(CHANNEL, "channel", "Channel to send message in. If not provided, defaults to current channel", false)),
+            new CmdData("s", "...",
+                    List.of(new CmdOption(STRING, "co", "...", true),
+                            new CmdOption(CHANNEL, "ch", "...", false)),
                     true, false), new Say(),
 
             new CmdData("cat", "Acquire a random cat picture",
                     List.of(),
-                    true, true), new Cat(dotenv, objectMapper),
+                    true, true), new Cat(dotenv, objectMapper, scheduler),
 
             new CmdData("e", "...",
                     List.of(new CmdOption(STRING, "c", "...", true)),
@@ -60,7 +62,7 @@ public class Bot extends ListenerAdapter {
 
             new CmdData("t", "...",
                     List.of(new CmdOption(STRING, "p", "...", true)),
-                    true, false), new Tanki(objectMapper, dotenv),
+                    true, false), new Tanki(objectMapper, dotenv, scheduler),
 
             new CmdData("free_credits", "Get 9999 free credits!",
                     List.of(),
