@@ -18,6 +18,7 @@ import org.zahin.cmd.*;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.db.DatabaseLoader;
 
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,6 +32,7 @@ public class Bot extends ListenerAdapter {
     private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"));
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Random rand = new Random();
+    private static final ZoneId z = ZoneId.of("America/Montreal");
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static Map<CmdData, Cmd> cmdMap = Map.of(
             new CmdData("credit", "Add or subtract social credit from a user",
@@ -74,7 +76,7 @@ public class Bot extends ListenerAdapter {
 
             new CmdData("daily", "Claim your free daily credits! Timer resets at 12 AM EST",
                     List.of(),
-                    true, true), new Daily(dbHandler, dotenv, rand)
+                    true, true), new Daily(dbHandler, dotenv, rand, z)
     );
 
     public static void main(String[] args) {

@@ -141,4 +141,40 @@ public class Util {
         } while (randomNumber.compareTo(max) >= 0 || randomNumber.compareTo(min) <= 0);
         return randomNumber;
     }
+
+    /**
+     * @param ns nanoseconds
+     * @return a nice formatted String of days, hours, minutes and seconds
+     */
+    // https://stackoverflow.com/a/45075606/21405641
+    public static String formatTimeWithDays(long ns) {
+        long tempSec = ns / (1000 * 1000 * 1000);
+        long sec = tempSec % 60;
+        long min = (tempSec / 60) % 60;
+        long hour = (tempSec / (60 * 60)) % 24;
+        long day = (tempSec / (24 * 60 * 60)) % 24;
+
+        String secStr = Util.pluralizer("second", "seconds", sec);
+        String minStr = Util.pluralizer("minute", "minutes", min);
+        String hourStr = Util.pluralizer("hour", "hours", hour);
+        String dayStr = Util.pluralizer("day", "days", day);
+        return String.format("%d %s, %d %s, %d %s, %d %s", day, dayStr, hour, hourStr, min, minStr, sec, secStr);
+    }
+
+    /**
+     * @param ns nanoseconds
+     * @return a nice formatted String of hours, minutes and seconds
+     */
+    // https://stackoverflow.com/a/45075606/21405641
+    public static String formatTime(long ns) {
+        long tempSec = ns / (1000 * 1000 * 1000);
+        long sec = tempSec % 60;
+        long min = (tempSec / 60) % 60;
+        long hour = tempSec / (60 * 60);
+
+        String secStr = Util.pluralizer("second", "seconds", sec);
+        String minStr = Util.pluralizer("minute", "minutes", min);
+        String hourStr = Util.pluralizer("hour", "hours", hour);
+        return String.format("%d %s, %d %s, %d %s", hour, hourStr, min, minStr, sec, secStr);
+    }
 }
