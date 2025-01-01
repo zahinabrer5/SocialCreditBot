@@ -26,8 +26,9 @@ public class DatabaseHandler {
                 BigInteger balance = new BigInteger(splitted[1]);
                 int numGain = Integer.parseInt(splitted[2]);
                 int numLoss = Integer.parseInt(splitted[3]);
-                LocalDate date = LocalDate.parse(splitted[4]);
-                UserProfile profile = new UserProfile(id, balance, numGain, numLoss, date);
+                LocalDate lastDaily = LocalDate.parse(splitted[4]);
+                LocalDate lastRob = LocalDate.parse(splitted[5]);
+                UserProfile profile = new UserProfile(id, balance, numGain, numLoss, lastDaily, lastRob);
                 userTable.put(id, profile);
             }
         } catch (IOException e) {
@@ -51,6 +52,8 @@ public class DatabaseHandler {
                 bw.write(String.valueOf(profile.numLoss()));
                 bw.write(",");
                 bw.write(profile.lastDaily().toString());
+                bw.write(",");
+                bw.write(profile.lastRob().toString());
                 bw.newLine();
             }
         } catch (IOException e) {
@@ -60,7 +63,8 @@ public class DatabaseHandler {
 
     public UserProfile read(String id) {
         if (!userTable.containsKey(id)) {
-            UserProfile profile = new UserProfile(id, BigInteger.valueOf(100), 0, 0, LocalDate.now().minusDays(1));
+            LocalDate yesterday = LocalDate.now().minusDays(1);
+            UserProfile profile = new UserProfile(id, BigInteger.valueOf(100), 0, 0, yesterday, yesterday);
             userTable.put(id, profile);
         }
         return userTable.get(id);
@@ -75,7 +79,7 @@ public class DatabaseHandler {
             numGain++;
         else
             numLoss++;
-        UserProfile updatedProfile = new UserProfile(id, balance, numGain, numLoss, profile.lastDaily());
+        UserProfile updatedProfile = new UserProfile(id, balance, numGain, numLoss, profile.lastDaily(), profile.lastRob());
         userTable.put(id, updatedProfile);
         saveDatabase();
     }
@@ -95,6 +99,18 @@ public class DatabaseHandler {
 
     public void setLastDailyUse(String userId, LocalDate date) {
         read(userId);
-        userTable.computeIfPresent(userId, (id, profile) -> new UserProfile(id, profile.balance(), profile.numGain(), profile.numLoss(), date));
+        userTable.computeIfPresent(userId, (id, profile) ->
+                new UserProfile(id, profile.balance(), profile.numGain(), profile.numLoss(), date, profile.lastRob()));
+    }
+
+    public LocalDate getLastRobUse(String userId) {
+        read(userId);
+        return userTable.get(userId).lastRob();
+    }
+
+    public void setLastRobUse(String userId, LocalDate date) {
+        read(userId);
+        userTable.computeIfPresent(userId, (id, profile) ->
+                new UserProfile(id, profile.balance(), profile.numGain(), profile.numLoss(), profile.lastDaily(), date));
     }
 }

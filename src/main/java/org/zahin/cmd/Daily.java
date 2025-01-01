@@ -1,6 +1,5 @@
 package org.zahin.cmd;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.util.Util;
@@ -14,13 +13,11 @@ import java.util.Random;
 
 public class Daily extends Cmd {
     private final DatabaseHandler dbHandler;
-    private final Dotenv dotenv;
     private final Random rand;
     private final ZoneId z;
 
-    public Daily(DatabaseHandler dbHandler, Dotenv dotenv, Random rand, ZoneId z) {
+    public Daily(DatabaseHandler dbHandler, Random rand, ZoneId z) {
         this.dbHandler = dbHandler;
-        this.dotenv = dotenv;
         this.rand = rand;
         this.z = z;
     }

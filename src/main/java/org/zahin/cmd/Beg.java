@@ -40,7 +40,7 @@ public class Beg extends Cmd {
 
         CustomEmbed embed = new CustomEmbed(dotenv);
         embed.setTitle(event.getUser().getName() + " is begging for " + amount + " social credit...");
-        embed.setDescription("Press the \"Accept\" button to help them out");
+        embed.setDescription("Press the \"Accept\" button to help <@" + event.getUser().getId() + "> out");
         embed.setThumbnail("https://i.imgur.com/8Ua4Lc8.png");
         embed.setColor(Color.WHITE);
 
@@ -69,11 +69,9 @@ public class Beg extends Cmd {
         for (Map.Entry<String, SlashCommandInteractionEvent> entry : map.entrySet()) {
             if (nonce.equals(entry.getKey())) {
                 SlashCommandInteractionEvent slashEvent = entry.getValue();
-
                 String giverId = buttonEvent.getUser().getId();
                 String receiverId = slashEvent.getUser().getId();
                 if (giverId.equals(receiverId)) return;
-
                 BigInteger amount = BigInteger.valueOf(slashEvent.getOption("amount").getAsLong());
 
                 dbHandler.update(receiverId, amount);

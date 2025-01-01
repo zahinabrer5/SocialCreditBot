@@ -18,6 +18,7 @@ import org.zahin.cmd.*;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.db.DatabaseLoader;
 
+import java.time.Instant;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -26,7 +27,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 
 public class Bot extends ListenerAdapter {
-    public static long startTime;
+    public static Instant startTime;
     private static final Dotenv dotenv = Dotenv.load();
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"));
@@ -72,11 +73,11 @@ public class Bot extends ListenerAdapter {
 
             new CmdData("rob", "Rob credits from someone else (there's a chance that they catch you in the act and rob you instead!)",
                     List.of(new CmdOption(USER, "user", "User to (try to) rob from", true)),
-                    true, true), new Rob(dbHandler, dotenv, rand),
+                    true, true), new Rob(dbHandler, dotenv, rand, z),
 
             new CmdData("daily", "Claim your free daily credits! Timer resets at 12 AM EST",
                     List.of(),
-                    true, true), new Daily(dbHandler, dotenv, rand, z)
+                    true, true), new Daily(dbHandler, rand, z)
     );
 
     public static void main(String[] args) {
@@ -101,10 +102,12 @@ public class Bot extends ListenerAdapter {
                         true, true), new Beg(dbHandler, dotenv, rand)
         );
 
+        // ToDo: Verification System
+
         JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), EnumSet.noneOf(GatewayIntent.class)) // slash commands don't need any intents
                 .addEventListeners(new Bot(), new DatabaseLoader(dbHandler), new ButtonListener())
                 .build();
-        startTime = System.nanoTime();
+        startTime = Instant.now();
 
         // These commands might take a few minutes to be active after creation/update/delete
         CommandListUpdateAction commands = jda.updateCommands();

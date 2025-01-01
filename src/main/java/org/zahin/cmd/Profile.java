@@ -9,6 +9,8 @@ import org.zahin.db.UserProfile;
 import org.zahin.util.CustomEmbed;
 import org.zahin.util.Util;
 
+import java.awt.*;
+
 public class Profile extends Cmd {
     private final DatabaseHandler dbHandler;
     private final Dotenv dotenv;
@@ -41,7 +43,7 @@ public class Profile extends Cmd {
                 ```""", profile.id(), profile.balance(), profile.numGain(), profile.numLoss()));
 
         String pfp = user.getAvatarUrl();
-        int colour = 0x000000;
+        int colour = Color.DARK_GRAY.getRGB();
         if (pfp != null) {
             colour = Util.mostCommonColour(Util.urlToImage(pfp));
             embed.setThumbnail(pfp);
