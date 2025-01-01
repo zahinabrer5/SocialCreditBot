@@ -8,10 +8,8 @@ import org.zahin.util.CustomEmbed;
 import org.zahin.util.Util;
 
 import java.math.BigInteger;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Random;
 
 public class Rob extends Cmd {
@@ -37,14 +35,8 @@ public class Rob extends Cmd {
         String robberId = event.getUser().getId();
         String victimId = user.getId();
 
-        LocalDate today = LocalDate.now(z);
-        if (!dbHandler.getLastRobUse(robberId).isBefore(today)) {
-            ZonedDateTime now = ZonedDateTime.now(z);
-            ZonedDateTime tomorrowMidnight = today.plusDays(1).atStartOfDay(z);
-            long nanosTillTomorrow = Duration.between(now, tomorrowMidnight).toNanos();
-            event.reply(String.format("You have to wait %s to use `/rob` again...", Util.formatTime(nanosTillTomorrow))).queue();
+        if (Util.oneDayCooldown(event, dbHandler.getLastRobUse(robberId), z, "rob"))
             return;
-        }
 
         if (robberId.equals(victimId)) {
             event.reply("You can't rob from yourself, silly!").queue();
@@ -57,12 +49,13 @@ public class Rob extends Cmd {
         }
 
         BigInteger userCredits = dbHandler.read(user.getId()).balance();
-
         BigInteger min = userCredits.divide(BigInteger.TWO).negate();
         BigInteger amount = Util.randomBigInteger(min, userCredits, rand);
 
         dbHandler.update(event.getUser().getId(), amount);
         dbHandler.update(user.getId(), amount.negate());
+
+        dbHandler.setLastDailyUse(robberId, LocalDate.now(z));
 
         CustomEmbed embed = new CustomEmbed(dotenv);
         embed.setTitle(String.format("%s just attempted to rob %s...", event.getUser().getName(), user.getName()));

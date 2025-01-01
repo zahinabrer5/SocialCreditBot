@@ -5,10 +5,8 @@ import org.zahin.db.DatabaseHandler;
 import org.zahin.util.Util;
 
 import java.math.BigInteger;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Random;
 
 public class Daily extends Cmd {
@@ -29,18 +27,14 @@ public class Daily extends Cmd {
 
     private void daily(SlashCommandInteractionEvent event) {
         String userId = event.getUser().getId();
-        LocalDate today = LocalDate.now(z);
-        if (!dbHandler.getLastDailyUse(userId).isBefore(today)) {
-            ZonedDateTime now = ZonedDateTime.now(z);
-            ZonedDateTime tomorrowMidnight = today.plusDays(1).atStartOfDay(z);
-            long nanosTillTomorrow = Duration.between(now, tomorrowMidnight).toNanos();
-            event.reply(String.format("You have to wait %s to use `/daily` again...", Util.formatTime(nanosTillTomorrow))).queue();
-            return;
-        }
 
-        dbHandler.setLastDailyUse(userId, today);
+        if (Util.oneDayCooldown(event, dbHandler.getLastDailyUse(userId), z, "daily"))
+            return;
+
         BigInteger amount = Util.randomBigInteger(BigInteger.ZERO, BigInteger.valueOf(100), rand);
         dbHandler.update(userId, amount);
+
+        dbHandler.setLastDailyUse(userId, LocalDate.now(z));
 
         event.reply(String.format("You just got **%d** social credit for today! Remember to do `/daily` tomorrow!", amount)).queue();
     }

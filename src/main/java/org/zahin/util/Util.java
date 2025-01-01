@@ -1,5 +1,7 @@
 package org.zahin.util;
 
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -11,6 +13,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.*;
 import java.util.Map.Entry;
@@ -187,5 +193,17 @@ public class Util {
             salt.append(SALTCHARS.charAt(index));
         }
         return salt.toString();
+    }
+
+    public static boolean oneDayCooldown(SlashCommandInteractionEvent event, LocalDate date, ZoneId z, String cmd) {
+        LocalDate today = LocalDate.now(z);
+        if (!date.isBefore(today)) {
+            ZonedDateTime now = ZonedDateTime.now(z);
+            ZonedDateTime tomorrowMidnight = today.plusDays(1).atStartOfDay(z);
+            long nanosTillTomorrow = Duration.between(now, tomorrowMidnight).toNanos();
+            event.reply(String.format("You have to wait %s to use `/%s` again...", cmd, Util.formatTime(nanosTillTomorrow))).queue();
+            return true;
+        }
+        return false;
     }
 }
