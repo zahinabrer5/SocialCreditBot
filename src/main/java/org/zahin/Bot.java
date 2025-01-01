@@ -88,6 +88,13 @@ public class Bot extends ListenerAdapter {
                         List.of(),
                         true, true), new Uptime()
         );
+        cmdMap.put(
+                new CmdData("give", "Give some of your social credit to someone else",
+                        List.of(new CmdOption(USER, "user", "The user to give credit to", true),
+                                new CmdOption(INTEGER, "amount", "Amount of credit to give (must be positive)", true),
+                                new CmdOption(STRING, "reason", "Reason for giving credit", false)),
+                        true, true), new Give(dbHandler, dotenv)
+        );
 
         JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), EnumSet.noneOf(GatewayIntent.class)) // slash commands don't need any intents
                 .addEventListeners(new Bot(), new DatabaseLoader(dbHandler))
