@@ -39,7 +39,7 @@ public class DatabaseHandler {
 
     public void saveDatabase() {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(databaseFile, false))) {
-            bw.write("User ID,Balance,Number of Gains,Number of Losses,Last date /daily used");
+            bw.write("User ID,Balance,Number of Gains,Number of Losses,Last date /daily used,Last date /rob used,Number of robberies");
             bw.newLine();
             for (Map.Entry<String, UserProfile> entry : userTable.entrySet()) {
                 String id = entry.getKey();
