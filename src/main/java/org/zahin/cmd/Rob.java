@@ -55,7 +55,7 @@ public class Rob extends Cmd {
         dbHandler.update(event.getUser().getId(), amount);
         dbHandler.update(user.getId(), amount.negate());
 
-        dbHandler.setLastDailyUse(robberId, LocalDate.now(z));
+        dbHandler.setLastRobUse(robberId, LocalDate.now(z));
 
         CustomEmbed embed = new CustomEmbed(dotenv);
         embed.setTitle(String.format("%s just attempted to rob %s...", event.getUser().getName(), user.getName()));
