@@ -201,7 +201,7 @@ public class Util {
             ZonedDateTime now = ZonedDateTime.now(z);
             ZonedDateTime tomorrowMidnight = today.plusDays(1).atStartOfDay(z);
             long nanosTillTomorrow = Duration.between(now, tomorrowMidnight).toNanos();
-            event.reply(String.format("You have to wait %s to use `/%s` again...", cmd, Util.formatTime(nanosTillTomorrow))).queue();
+            event.reply(String.format("You have to wait %s to use `/%s` again...", Util.formatTime(nanosTillTomorrow), cmd)).queue();
             return true;
         }
         return false;
