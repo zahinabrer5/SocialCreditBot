@@ -42,6 +42,12 @@ public class Give extends Cmd {
 
         String userId = user.getId();
         String eventUserId = event.getUser().getId();
+
+        if (userId.equals(eventUserId)) {
+            event.reply("You can't give yourself credits, you poopoo!!!").queue();
+            return;
+        }
+
         dbHandler.update(userId, amount);
         dbHandler.update(eventUserId, amount.negate());
         BigInteger balance = dbHandler.read(userId).balance();
