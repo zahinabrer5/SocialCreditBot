@@ -72,7 +72,6 @@ public class Tanki extends Cmd implements Runnable {
     private final Dotenv dotenv;
     private final ScheduledExecutorService scheduler;
     private SlashCommandInteractionEvent event;
-    private String player;
 
     public Tanki(ObjectMapper objectMapper, Dotenv dotenv, ScheduledExecutorService scheduler) {
         this.objectMapper = objectMapper;
@@ -82,7 +81,7 @@ public class Tanki extends Cmd implements Runnable {
 
     @Override
     public void run(SlashCommandInteractionEvent event) {
-        player = event.getOption("p").getAsString();
+        this.event = event;
         scheduler.submit(this);
     }
 
@@ -92,6 +91,7 @@ public class Tanki extends Cmd implements Runnable {
     }
 
     private void tanki() {
+        String player = event.getOption("p").getAsString();
         String urlStr = "https://ratings.tankionline.com/api/eu/profile/?user=" + player + "&lang=en";
         URL url;
         try {
@@ -122,8 +122,10 @@ public class Tanki extends Cmd implements Runnable {
             return;
         }
 
-        ResponseJsonObj resp = apiResponse.response();
+        sendEmbeds(apiResponse.response());
+    }
 
+    private void sendEmbeds(ResponseJsonObj resp) {
         CustomEmbed embed = new CustomEmbed(dotenv);
         embed.setTitle(getRank(resp.rank()) + " " + resp.name());
         embed.setUrl("https://ratings.tankionline.com/en/user/" + resp.name());
@@ -286,13 +288,15 @@ public class Tanki extends Cmd implements Runnable {
 
         return String.format("""
                         ```javascript
+                        \u200B
                         Rating     |      Place |      Value | Previously
                         -------------------------------------------------
                         Experience | %10s | %10s | %10s
                         Gold Boxes | %10s | %10s | %10s
                         Crystals   | %10s | %10s | %10s
                         Efficiency | %10s | %10s | %10s
-                        ```""", xpRow[0], xpRow[1], prevXp,
+                        ```""",
+                xpRow[0], xpRow[1], prevXp,
                 gbRow[0], gbRow[1], prevGb,
                 crRow[0], crRow[1], prevCr,
                 efRow[0], efRow[1], prevEf);
