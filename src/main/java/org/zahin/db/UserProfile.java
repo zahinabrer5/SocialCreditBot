@@ -6,7 +6,7 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 
 public record UserProfile(String id, BigInteger balance, int numGain, int numLoss,
-                          LocalDate lastDaily, LocalDate lastRob) implements Comparable<UserProfile> {
+                          LocalDate lastDaily, LocalDate lastRob, int numRobs) implements Comparable<UserProfile> {
     @Override
     public int compareTo(@NotNull UserProfile o) {
         return o.balance().compareTo(this.balance);

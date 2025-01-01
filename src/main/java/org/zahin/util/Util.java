@@ -164,7 +164,7 @@ public class Util {
         String minStr = Util.pluralizer("minute", "minutes", min);
         String hourStr = Util.pluralizer("hour", "hours", hour);
         String dayStr = Util.pluralizer("day", "days", day);
-        return String.format("%d %s, %d %s, %d %s, %d %s", day, dayStr, hour, hourStr, min, minStr, sec, secStr);
+        return String.format("%d %s, %d %s, %d %s and %d %s", day, dayStr, hour, hourStr, min, minStr, sec, secStr);
     }
 
     /**
@@ -181,7 +181,7 @@ public class Util {
         String secStr = Util.pluralizer("second", "seconds", sec);
         String minStr = Util.pluralizer("minute", "minutes", min);
         String hourStr = Util.pluralizer("hour", "hours", hour);
-        return String.format("%d %s, %d %s, %d %s", hour, hourStr, min, minStr, sec, secStr);
+        return String.format("%d %s, %d %s and %d %s", hour, hourStr, min, minStr, sec, secStr);
     }
 
     // https://stackoverflow.com/a/20536597/21405641

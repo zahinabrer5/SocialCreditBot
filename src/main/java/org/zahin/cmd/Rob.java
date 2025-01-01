@@ -7,7 +7,9 @@ import org.zahin.db.DatabaseHandler;
 import org.zahin.util.CustomEmbed;
 import org.zahin.util.Util;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Random;
@@ -50,7 +52,10 @@ public class Rob extends Cmd {
 
         BigInteger userCredits = dbHandler.read(user.getId()).balance();
         BigInteger min = userCredits.divide(BigInteger.TWO).negate();
-        BigInteger amount = Util.randomBigInteger(min, userCredits, rand);
+        int numRobs = dbHandler.getNumRobs(robberId);
+        BigInteger max = new BigDecimal(userCredits).multiply(BigDecimal.valueOf(Math.pow(0.6, numRobs)))
+                .setScale(0, RoundingMode.HALF_UP).toBigInteger();
+        BigInteger amount = Util.randomBigInteger(min, max, rand);
 
         dbHandler.update(event.getUser().getId(), amount);
         dbHandler.update(user.getId(), amount.negate());

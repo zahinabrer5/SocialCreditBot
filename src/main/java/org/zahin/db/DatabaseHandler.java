@@ -28,7 +28,8 @@ public class DatabaseHandler {
                 int numLoss = Integer.parseInt(splitted[3]);
                 LocalDate lastDaily = LocalDate.parse(splitted[4]);
                 LocalDate lastRob = LocalDate.parse(splitted[5]);
-                UserProfile profile = new UserProfile(id, balance, numGain, numLoss, lastDaily, lastRob);
+                int numRobs = Integer.parseInt(splitted[6]);
+                UserProfile profile = new UserProfile(id, balance, numGain, numLoss, lastDaily, lastRob, numRobs);
                 userTable.put(id, profile);
             }
         } catch (IOException e) {
@@ -54,6 +55,8 @@ public class DatabaseHandler {
                 bw.write(profile.lastDaily().toString());
                 bw.write(",");
                 bw.write(profile.lastRob().toString());
+                bw.write(",");
+                bw.write(String.valueOf(profile.numRobs()));
                 bw.newLine();
             }
         } catch (IOException e) {
@@ -64,7 +67,7 @@ public class DatabaseHandler {
     public UserProfile read(String id) {
         if (!userTable.containsKey(id)) {
             LocalDate yesterday = LocalDate.now().minusDays(1);
-            UserProfile profile = new UserProfile(id, BigInteger.valueOf(100), 0, 0, yesterday, yesterday);
+            UserProfile profile = new UserProfile(id, BigInteger.valueOf(100), 0, 0, yesterday, yesterday, 0);
             userTable.put(id, profile);
         }
         return userTable.get(id);
@@ -79,7 +82,7 @@ public class DatabaseHandler {
             numGain++;
         else
             numLoss++;
-        UserProfile updatedProfile = new UserProfile(id, balance, numGain, numLoss, profile.lastDaily(), profile.lastRob());
+        UserProfile updatedProfile = new UserProfile(id, balance, numGain, numLoss, profile.lastDaily(), profile.lastRob(), profile.numRobs());
         userTable.put(id, updatedProfile);
         saveDatabase();
     }
@@ -100,7 +103,7 @@ public class DatabaseHandler {
     public void setLastDailyUse(String userId, LocalDate date) {
         read(userId);
         userTable.computeIfPresent(userId, (id, profile) ->
-                new UserProfile(id, profile.balance(), profile.numGain(), profile.numLoss(), date, profile.lastRob()));
+                new UserProfile(id, profile.balance(), profile.numGain(), profile.numLoss(), date, profile.lastRob(), profile.numRobs()));
     }
 
     public LocalDate getLastRobUse(String userId) {
@@ -111,6 +114,11 @@ public class DatabaseHandler {
     public void setLastRobUse(String userId, LocalDate date) {
         read(userId);
         userTable.computeIfPresent(userId, (id, profile) ->
-                new UserProfile(id, profile.balance(), profile.numGain(), profile.numLoss(), profile.lastDaily(), date));
+                new UserProfile(id, profile.balance(), profile.numGain(), profile.numLoss(), profile.lastDaily(), date, profile.numRobs() + 1));
+    }
+
+    public int getNumRobs(String userId) {
+        read(userId);
+        return userTable.get(userId).numRobs();
     }
 }
