@@ -177,4 +177,15 @@ public class Util {
         String hourStr = Util.pluralizer("hour", "hours", hour);
         return String.format("%d %s, %d %s, %d %s", hour, hourStr, min, minStr, sec, secStr);
     }
+
+    // https://stackoverflow.com/a/20536597/21405641
+    public static String randAlphaNum(int length, Random rand) {
+        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+        StringBuilder salt = new StringBuilder();
+        while (salt.length() < length) { // length of the random string.
+            int index = (int) (rand.nextFloat() * SALTCHARS.length());
+            salt.append(SALTCHARS.charAt(index));
+        }
+        return salt.toString();
+    }
 }

@@ -46,7 +46,7 @@ public class Bot extends ListenerAdapter {
                     true, true), new Leaderboard(dbHandler, dotenv),
 
             new CmdData("profile", "View a user's social credit stats",
-                    List.of(new CmdOption(USER, "user", "The user to view", true)),
+                    List.of(new CmdOption(USER, "user", "The user to view (if not given, defaults to yourself)", false)),
                     true, true), new Profile(dbHandler, dotenv),
 
             new CmdData("s", "...",
@@ -95,9 +95,14 @@ public class Bot extends ListenerAdapter {
                                 new CmdOption(STRING, "reason", "Reason for giving credit", false)),
                         true, true), new Give(dbHandler, dotenv)
         );
+        cmdMap.put(
+                new CmdData("beg", "Beg for social credits in the chat",
+                        List.of(new CmdOption(INTEGER, "amount", "Amount of credit to beg for (must be positive)", true)),
+                        true, true), new Beg(dbHandler, dotenv, rand)
+        );
 
         JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), EnumSet.noneOf(GatewayIntent.class)) // slash commands don't need any intents
-                .addEventListeners(new Bot(), new DatabaseLoader(dbHandler))
+                .addEventListeners(new Bot(), new DatabaseLoader(dbHandler), new ButtonListener())
                 .build();
         startTime = System.nanoTime();
 

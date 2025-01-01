@@ -3,6 +3,7 @@ package org.zahin.cmd;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.db.UserProfile;
 import org.zahin.util.CustomEmbed;
@@ -19,7 +20,10 @@ public class Profile extends Cmd {
 
     @Override
     public void run(SlashCommandInteractionEvent event) {
-        User user = event.getOption("user").getAsUser();
+        OptionMapping userOption = event.getOption("user");
+        User user = event.getUser();
+        if (userOption != null)
+            user = userOption.getAsUser();
         profile(event, user);
     }
 
@@ -37,8 +41,11 @@ public class Profile extends Cmd {
                 ```""", profile.id(), profile.balance(), profile.numGain(), profile.numLoss()));
 
         String pfp = user.getAvatarUrl();
-        int colour = Util.mostCommonColour(Util.urlToImage(pfp));
-        embed.setThumbnail(pfp);
+        int colour = 0x000000;
+        if (pfp != null) {
+            colour = Util.mostCommonColour(Util.urlToImage(pfp));
+            embed.setThumbnail(pfp);
+        }
         embed.setColor(colour);
 
         event.replyEmbeds(embed.build()).queue();
