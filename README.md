@@ -1,3 +1,3 @@
 # Social Credit Discord Bot
 
-![loss](/img/credit/loss.png)
+![loss](https://i.imgur.com/l4sQ8lV.png)
