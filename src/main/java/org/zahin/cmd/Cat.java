@@ -67,11 +67,12 @@ public class Cat extends Cmd implements Runnable {
         if (retrievedCatUrl.isEmpty()) {
             InputStream contingencyCat = getClass().getResourceAsStream("/img/tabby.jpg");
             embed.setImage("attachment://tabby.jpg");
-            event.reply("Cat couldn't be found whatsoever! Here's a backup cat:").queue();
+            event.reply("Cat couldn't be found! Here's a backup cat:").queue();
             event.getMessageChannel().sendFiles(FileUpload.fromData(contingencyCat, "tabby.jpg")).setEmbeds(embed.build()).queue();
             return;
         }
         embed.setImage(retrievedCatUrl);
-        event.replyEmbeds(embed.build()).queue();
+        event.deferReply().queue();
+        event.getHook().editOriginalEmbeds(embed.build()).queue();
     }
 }

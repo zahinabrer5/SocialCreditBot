@@ -28,6 +28,7 @@ public class Eval extends Cmd {
                 if (snip.status() == jdk.jshell.Snippet.Status.VALID) {
                     event.reply(String.format("""
                             ```java
+                            \u200B
                             ➜ %s```""", snip.value())).setEphemeral(true).queue();
                 }
             });

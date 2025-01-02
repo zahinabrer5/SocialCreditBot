@@ -36,7 +36,8 @@ public class Profile extends Cmd {
         embed.setTitle(String.format("@%s's profile", user.getName()));
         embed.setDescription(String.format("""
                 User: <@%s>
-                ```java
+                ```go
+                \u200B
                 Social Credit Balance:   %d
                 Number of Credit Gains:  %d
                 Number of Credit Losses: %d

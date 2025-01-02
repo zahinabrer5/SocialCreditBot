@@ -2,7 +2,6 @@ package org.zahin.cmd;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.cdimascio.dotenv.Dotenv;
-import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.jetbrains.annotations.NotNull;
@@ -134,15 +133,13 @@ public class Tanki extends Cmd implements Runnable {
 
         CustomEmbed weeklyRatings = new CustomEmbed(dotenv);
         weeklyRatings.addField("__Weekly Ratings__", getWeeklyRatingsTable(resp), false);
-        weeklyRatings.setFooter("View this embed in landscape mode if on mobile | See next message (embed) for rest of stats");
+        weeklyRatings.setFooter("View this embed in landscape mode if on mobile | See next embed for rest of stats");
         weeklyRatings.setColor(0x036530);
 
         if (resp.hasPremium()) {
             embed.setColor(0xfbd003);
             weeklyRatings.setColor(0xfbd003);
         }
-
-        event.replyEmbeds(weeklyRatings.build()).queue();
 
         embed.addField("", "**__Profile__**", false);
         embed.addField("Kills", Util.thousandsSep(resp.kills()), true);
@@ -178,12 +175,13 @@ public class Tanki extends Cmd implements Runnable {
 
         embed.setFooter("View on desktop for better embed formatting");
 
-        MessageChannel channel = event.getMessageChannel();
         int rank = Math.min(resp.rank(), 31);
         String file = String.format("/img/ranks/Icons%s_%01d.png", resp.hasPremium() ? "Premium" : "Normal", rank);
         InputStream rankIcon = getClass().getResourceAsStream(file);
         embed.setThumbnail("attachment://rank.png");
-        channel.sendFiles(FileUpload.fromData(rankIcon, "rank.png")).setEmbeds(embed.build()).queue();
+        event.deferReply().queue();
+        event.getHook().editOriginalAttachments(FileUpload.fromData(rankIcon, "rank.png")).queue();
+        event.getHook().editOriginalEmbeds(weeklyRatings.build(), embed.build()).queue();
     }
 
     private void errorEmbed(SlashCommandInteractionEvent event, int code) {
