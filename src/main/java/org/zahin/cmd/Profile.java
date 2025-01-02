@@ -45,12 +45,15 @@ public class Profile extends Cmd {
 
         String pfp = user.getAvatarUrl();
         int colour = Color.DARK_GRAY.getRGB();
+
+        event.deferReply().queue();
+
         if (pfp != null) {
             colour = Util.mostCommonColour(Util.urlToImage(pfp));
             embed.setThumbnail(pfp);
         }
         embed.setColor(colour);
 
-        event.replyEmbeds(embed.build()).queue();
+        event.getHook().editOriginalEmbeds(embed.build()).queue();
     }
 }

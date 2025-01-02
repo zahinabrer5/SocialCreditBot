@@ -39,6 +39,8 @@ public class Cat extends Cmd implements Runnable {
         long start = System.nanoTime();
         String url = "https://api.thecatapi.com/v1/images/search?api_key=" + dotenv.get("CAT_API_KEY");
 
+        event.deferReply().queue();
+
         JsonNode node;
         try {
             node = objectMapper.readTree(Util.urlContentToString(url)).get(0);
@@ -46,7 +48,7 @@ public class Cat extends Cmd implements Runnable {
             throw new RuntimeException(e);
         }
         if (!node.has("url")) {
-            event.reply("Something has gone horribly wrong... your cat is nowhere to be found!!! Perhaps try again :cat:").setEphemeral(true).queue();
+            event.getHook().editOriginal("Something has gone horribly wrong... your cat is nowhere to be found!!! Perhaps try again :cat:").queue();
             return;
         }
 
@@ -66,13 +68,13 @@ public class Cat extends Cmd implements Runnable {
 
         if (retrievedCatUrl.isEmpty()) {
             InputStream contingencyCat = getClass().getResourceAsStream("/img/tabby.jpg");
+            embed.setTitle("Cat couldn't be found! Here's a backup cat:");
             embed.setImage("attachment://tabby.jpg");
-            event.reply("Cat couldn't be found! Here's a backup cat:").queue();
-            event.getMessageChannel().sendFiles(FileUpload.fromData(contingencyCat, "tabby.jpg")).setEmbeds(embed.build()).queue();
+            event.getHook().editOriginalAttachments(FileUpload.fromData(contingencyCat, "tabby.jpg")).queue();
+            event.getHook().editOriginalEmbeds(embed.build()).queue();
             return;
         }
         embed.setImage(retrievedCatUrl);
-        event.deferReply().queue();
         event.getHook().editOriginalEmbeds(embed.build()).queue();
     }
 }

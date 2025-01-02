@@ -99,6 +99,8 @@ public class Tanki extends Cmd implements Runnable {
             throw new RuntimeException(e);
         }
 
+        event.deferReply().queue();
+
         int code;
         try {
             code = ((HttpURLConnection) url.openConnection()).getResponseCode();
@@ -179,7 +181,6 @@ public class Tanki extends Cmd implements Runnable {
         String file = String.format("/img/ranks/Icons%s_%01d.png", resp.hasPremium() ? "Premium" : "Normal", rank);
         InputStream rankIcon = getClass().getResourceAsStream(file);
         embed.setThumbnail("attachment://rank.png");
-        event.deferReply().queue();
         event.getHook().editOriginalAttachments(FileUpload.fromData(rankIcon, "rank.png")).queue();
         event.getHook().editOriginalEmbeds(weeklyRatings.build(), embed.build()).queue();
     }
@@ -190,7 +191,7 @@ public class Tanki extends Cmd implements Runnable {
         embed.setDescription("Make sure the player actually exists...");
         embed.setImage("https://http.cat/" + code);
         embed.setColor(Color.BLACK);
-        event.replyEmbeds(embed.build()).queue();
+        event.getHook().editOriginalEmbeds(embed.build()).queue();
     }
 
     private String getGiftsInfo(List<Present> presents) {
