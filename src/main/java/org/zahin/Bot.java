@@ -101,6 +101,11 @@ public class Bot extends ListenerAdapter {
                         List.of(new CmdOption(INTEGER, "amount", "Amount of credit to beg for (must be positive)", true)),
                         true, true), new Beg(dbHandler, dotenv, rand)
         );
+        cmdMap.put(
+                new CmdData("prune", "Prune (remove) users from the database",
+                        List.of(new CmdOption(USER, "user", "The user to prune", true)),
+                        true, false), new Prune(dbHandler)
+        );
 
         // ToDo: Verification System
 

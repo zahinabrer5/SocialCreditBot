@@ -121,4 +121,11 @@ public class DatabaseHandler {
         read(userId);
         return userTable.get(userId).numRobs();
     }
+
+    public UserProfile removeUserRow(String userId) {
+        read(userId);
+        UserProfile profile = userTable.remove(userId);
+        saveDatabase();
+        return profile;
+    }
 }
