@@ -50,15 +50,26 @@ public class Rob extends Cmd {
             return;
         }
 
-        BigInteger userCredits = dbHandler.read(user.getId()).balance();
-        BigInteger min = userCredits.divide(BigInteger.TWO).negate();
+        BigInteger victimBalance = dbHandler.read(victimId).balance();
+
+        // minimum possible rob will be -50% of the victim's balance
+        BigInteger min = victimBalance.divide(BigInteger.TWO).negate();
+
+        // maximum possible rob starts off at 100% of victim's balance but decreases exponentially as
+        // robber begins to rob more (so robber is exponentially less likely to make a profit the more they rob)
         int numRobs = dbHandler.getNumRobs(robberId);
-        BigInteger max = new BigDecimal(userCredits).multiply(BigDecimal.valueOf(Math.pow(0.6, numRobs)))
+        BigInteger max = new BigDecimal(victimBalance).multiply(BigDecimal.valueOf(Math.pow(0.6, numRobs)))
                 .setScale(0, RoundingMode.HALF_UP).toBigInteger();
+
+        // set a hard maximum possible rob of 500 social credit
+        BigInteger fiveHundred = BigInteger.valueOf(500);
+        if (max.compareTo(fiveHundred) > 0)
+            max = fiveHundred;
+
         BigInteger amount = Util.randomBigInteger(min, max, rand);
 
-        dbHandler.update(event.getUser().getId(), amount);
-        dbHandler.update(user.getId(), amount.negate());
+        dbHandler.update(robberId, amount);
+        dbHandler.update(victimId, amount.negate());
 
         dbHandler.setLastRobUse(robberId, LocalDate.now(z));
 
@@ -73,6 +84,8 @@ public class Rob extends Cmd {
             embed.setColor(0x2eb33e);
             embed.setThumbnail("https://i.imgur.com/HsM6YU1.png");
         }
+        embed.appendDescription(String.format("<@%s> now has %d social credit%n", robberId, dbHandler.read(robberId).balance()));
+        embed.appendDescription(String.format("<@%s> now has %d social credit", victimId, dbHandler.read(victimId).balance()));
         event.replyEmbeds(embed.build()).queue();
     }
 }

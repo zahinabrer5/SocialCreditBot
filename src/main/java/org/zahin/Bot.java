@@ -102,7 +102,7 @@ public class Bot extends ListenerAdapter {
                         true, true), new Beg(dbHandler, dotenv, rand)
         );
         cmdMap.put(
-                new CmdData("prune", "Prune (remove) users from the database",
+                new CmdData("prune", "Prune (remove) a user from the database",
                         List.of(new CmdOption(USER, "user", "The user to prune", true)),
                         true, false), new Prune(dbHandler)
         );
