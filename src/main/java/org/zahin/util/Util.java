@@ -8,7 +8,9 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.DecimalFormat;
@@ -205,5 +207,10 @@ public class Util {
             return true;
         }
         return false;
+    }
+
+    public static BigInteger scaleBigInteger(BigInteger bi, double scalar) {
+        return new BigDecimal(bi).multiply(BigDecimal.valueOf(scalar))
+                .setScale(0, RoundingMode.HALF_UP).toBigInteger();
     }
 }

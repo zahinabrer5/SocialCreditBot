@@ -7,9 +7,7 @@ import org.zahin.db.DatabaseHandler;
 import org.zahin.util.CustomEmbed;
 import org.zahin.util.Util;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Random;
@@ -50,22 +48,30 @@ public class Rob extends Cmd {
             return;
         }
 
+        // minimum possible rob will be -50% of the victim's wealth
         BigInteger victimBalance = dbHandler.read(victimId).balance();
-
-        // minimum possible rob will be -50% of the victim's balance
         BigInteger min = victimBalance.divide(BigInteger.TWO).negate();
 
         // maximum possible rob starts off at 100% of victim's balance but decreases exponentially as
         // robber begins to rob more (so robber is exponentially less likely to make a profit the more they rob)
         int numRobs = dbHandler.getNumRobs(robberId);
-        BigInteger max = new BigDecimal(victimBalance).multiply(BigDecimal.valueOf(Math.pow(0.6, numRobs)))
-                .setScale(0, RoundingMode.HALF_UP).toBigInteger();
+        BigInteger max = Util.scaleBigInteger(victimBalance, Math.pow(0.6, numRobs));
+
+        // if the absolute difference between the balances of the robber and victim is at least 1000,
+        // then the robber can rob from at most 10% of the victim's wealth
+        BigInteger robberBalance = dbHandler.read(robberId).balance();
+        BigInteger balanceDiff = robberBalance.subtract(victimBalance).abs();
+        BigInteger maxScaled = Util.scaleBigInteger(victimBalance, 0.1);
+        if (balanceDiff.compareTo(BigInteger.valueOf(1000)) >= 0 && maxScaled.compareTo(max) < 0)
+            max = maxScaled;
 
         // set a hard maximum possible rob of 500 social credit
         BigInteger fiveHundred = BigInteger.valueOf(500);
         if (max.compareTo(fiveHundred) > 0)
             max = fiveHundred;
 
+        // all of the above constraints are set to make it harder for people to exploit /rob and
+        // get rich very quickly...
         BigInteger amount = Util.randomBigInteger(min, max, rand);
 
         dbHandler.update(robberId, amount);
