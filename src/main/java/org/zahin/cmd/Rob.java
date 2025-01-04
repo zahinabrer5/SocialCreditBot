@@ -48,8 +48,14 @@ public class Rob extends Cmd {
             return;
         }
 
-        // minimum possible rob will be -50% of the victim's wealth
         BigInteger victimBalance = dbHandler.read(victimId).balance();
+
+        if (victimBalance.compareTo(BigInteger.valueOf(100)) <= 0) {
+            event.reply("You can't rob from this user since they don't have more than 100 social credit!").queue();
+            return;
+        }
+
+        // minimum possible rob will be -50% of the victim's wealth
         BigInteger min = victimBalance.divide(BigInteger.TWO).negate();
 
         // maximum possible rob starts off at 100% of victim's balance but decreases exponentially as
