@@ -1,5 +1,6 @@
 package org.zahin;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;
@@ -29,8 +30,11 @@ public class Verification extends ListenerAdapter {
 
     public void listenForWebhooks() {
         // Listen on http://localhost:7000 for webhooks from Apps Script
-        Javalin app = Javalin.create().start("localhost", 7000);
-        app.post("/webhook", ctx -> {
+        String host = Bot.dotenv.get("WEBHOOK_HOST");
+        int port = Integer.parseInt(Bot.dotenv.get("WEBHOOK_PORT"));
+        String path = Bot.dotenv.get("WEBHOOK_PATH");
+        Javalin app = Javalin.create().start(host, port);
+        app.post(path, ctx -> {
             String webhookData = ctx.body();
             JsonNode json = objectMapper.readTree(webhookData);
             verifyUser(json.get("discordUser").asText(), json.get("schoolEmail").asText());
@@ -49,8 +53,15 @@ public class Verification extends ListenerAdapter {
         if (member == null)
             return;
 
-        if (!schoolEmail.endsWith("uottawa.ca") && !schoolEmail.endsWith("cmail.carleton.ca"))
-            return;
+        JsonNode allowedDomains;
+        try {
+            allowedDomains = objectMapper.readTree(Bot.dotenv.get("ALLOWED_DOMAINS"));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        for (int i = 0; i < allowedDomains.size(); i++)
+            if (!schoolEmail.endsWith("@" + allowedDomains.get(i)))
+                return;
 
         dbHandler.saveVerifCode(member.getId(), schoolEmail);
     }
