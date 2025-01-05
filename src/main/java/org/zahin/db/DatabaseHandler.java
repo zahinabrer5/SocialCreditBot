@@ -1,9 +1,9 @@
 package org.zahin.db;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import org.simplejavamail.api.email.Email;
 import org.simplejavamail.api.mailer.Mailer;
 import org.simplejavamail.email.EmailBuilder;
+import org.zahin.Bot;
 import org.zahin.util.Util;
 
 import java.io.*;
@@ -12,22 +12,19 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class DatabaseHandler {
     private final File userTableFile;
     private final File verificationTableFile;
     private final Map<String, UserProfile> userTable = new HashMap<>();
     private final Map<String, VerificationData> verificationTable = new HashMap<>();
-    private final Random rand;
     private final Mailer mailer;
 
-    public DatabaseHandler(Dotenv dotenv, Random rand, Mailer mailer) {
-        this.rand = rand;
+    public DatabaseHandler(Mailer mailer) {
         this.mailer = mailer;
 
-        userTableFile = new File(dotenv.get("DATABASE_FILE"));
-        verificationTableFile = new File(dotenv.get("VERIFICATION_TABLE_FILE"));
+        userTableFile = new File(Bot.dotenv.get("DATABASE_FILE"));
+        verificationTableFile = new File(Bot.dotenv.get("VERIFICATION_TABLE_FILE"));
     }
 
     public void loadDatabase() {
@@ -178,12 +175,12 @@ public class DatabaseHandler {
         if (verificationTable.containsKey(id))
             return;
 
-        String code = Util.randAlphaNum(8, rand);
+        String code = Util.randAlphaNum(8, Bot.rand);
         for (VerificationData datum : verificationTable.values()) {
             if (datum.schoolEmail().equals(schoolEmail))
                 return;
             if (datum.code().equals(code))
-                code = Util.randAlphaNum(8, rand);
+                code = Util.randAlphaNum(8, Bot.rand);
         }
 
         Email email = EmailBuilder.startingBlank()

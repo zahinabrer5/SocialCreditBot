@@ -1,7 +1,6 @@
 package org.zahin.cmd;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +15,6 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
 
 record Rating(int position, int value) {
 }
@@ -65,31 +63,21 @@ record ResponseJsonObj(
 record TankiRatingsApiResponse(ResponseJsonObj response, HttpResponseType responseType) {
 }
 
-public class Tanki extends Cmd implements Runnable {
+public class Tanki extends Cmd {
     private static final String[] rankNames = {"Recruit", "Private", "Gefreiter", "Corporal", "Master Corporal", "Sergeant", "Staff Sergeant", "Master Sergeant", "First Sergeant", "Sergeant-Major", "Warrant Officer 1", "Warrant Officer 2", "Warrant Officer 3", "Warrant Officer 4", "Warrant Officer 5", "Third Lieutenant", "Second Lieutenant", "First Lieutenant", "Captain", "Major", "Lieutenant Colonel", "Colonel", "Brigadier", "Major General", "Lieutenant General", "General", "Marshal", "Field Marshal", "Commander", "Generalissimo", "Legend (1)"};
     private final ObjectMapper objectMapper;
-    private final Dotenv dotenv;
-    private final ScheduledExecutorService scheduler;
     private SlashCommandInteractionEvent event;
 
-    public Tanki(ObjectMapper objectMapper, Dotenv dotenv, ScheduledExecutorService scheduler) {
+    public Tanki(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        this.dotenv = dotenv;
-        this.scheduler = scheduler;
     }
 
     @Override
     public void run(SlashCommandInteractionEvent event) {
-        this.event = event;
-        scheduler.submit(this);
+        tanki(event);
     }
 
-    @Override
-    public void run() {
-        tanki();
-    }
-
-    private void tanki() {
+    private void tanki(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
         String player = event.getOption("p").getAsString();
@@ -127,13 +115,13 @@ public class Tanki extends Cmd implements Runnable {
     }
 
     private void sendEmbeds(ResponseJsonObj resp) {
-        CustomEmbed embed = new CustomEmbed(dotenv);
+        CustomEmbed embed = new CustomEmbed();
         embed.setTitle(getRank(resp.rank()) + " " + resp.name());
         embed.setUrl("https://ratings.tankionline.com/en/user/" + resp.name());
         embed.setDescription(String.format("%s / %s XP", Util.thousandsSep(resp.score()), Util.thousandsSep(resp.scoreNext())));
         embed.setColor(0x036530);
 
-        CustomEmbed weeklyRatings = new CustomEmbed(dotenv);
+        CustomEmbed weeklyRatings = new CustomEmbed();
         weeklyRatings.addField("__Weekly Ratings__", getWeeklyRatingsTable(resp), false);
         weeklyRatings.setFooter("View this embed in landscape mode if on mobile | See next embed for rest of stats");
         weeklyRatings.setColor(0x036530);
@@ -186,7 +174,7 @@ public class Tanki extends Cmd implements Runnable {
     }
 
     private void errorEmbed(SlashCommandInteractionEvent event, int code) {
-        CustomEmbed embed = new CustomEmbed(dotenv);
+        CustomEmbed embed = new CustomEmbed();
         embed.setTitle("Could not fetch player stats!");
         embed.setDescription("Make sure the player actually exists...");
         embed.setImage("https://http.cat/" + code);

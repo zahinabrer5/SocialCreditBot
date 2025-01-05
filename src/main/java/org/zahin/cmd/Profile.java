@@ -1,6 +1,5 @@
 package org.zahin.cmd;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -13,11 +12,9 @@ import java.awt.*;
 
 public class Profile extends Cmd {
     private final DatabaseHandler dbHandler;
-    private final Dotenv dotenv;
 
-    public Profile(DatabaseHandler dbHandler, Dotenv dotenv) {
+    public Profile(DatabaseHandler dbHandler) {
         this.dbHandler = dbHandler;
-        this.dotenv = dotenv;
     }
 
     @Override
@@ -34,7 +31,7 @@ public class Profile extends Cmd {
 
         UserProfile profile = dbHandler.read(user.getId());
 
-        CustomEmbed embed = new CustomEmbed(dotenv);
+        CustomEmbed embed = new CustomEmbed();
         embed.setTitle(String.format("@%s's profile", user.getName()));
         embed.setDescription(String.format("""
                 User: <@%s>

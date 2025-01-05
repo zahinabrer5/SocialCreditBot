@@ -1,6 +1,5 @@
 package org.zahin.cmd;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
@@ -11,11 +10,9 @@ import java.math.BigInteger;
 
 public class Give extends Cmd {
     private final DatabaseHandler dbHandler;
-    private final Dotenv dotenv;
 
-    public Give(DatabaseHandler dbHandler, Dotenv dotenv) {
+    public Give(DatabaseHandler dbHandler) {
         this.dbHandler = dbHandler;
-        this.dotenv = dotenv;
     }
 
     @Override
@@ -53,7 +50,7 @@ public class Give extends Cmd {
         BigInteger balance = dbHandler.read(userId).balance();
         BigInteger eventUserBalance = dbHandler.read(eventUserId).balance();
 
-        CustomEmbed embed = new CustomEmbed(dotenv);
+        CustomEmbed embed = new CustomEmbed();
         embed.setTitle(String.format("%s just gave %s %d social credit!",
                 event.getUser().getName(), user.getName(), amount));
         embed.setDescription(String.format("""

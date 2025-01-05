@@ -71,7 +71,14 @@ public class Verification extends ListenerAdapter {
             return;
 
         String givenCode = event.getMessage().getContentStripped();
-        if (dbHandler.matchVerifCode(member.getId(), givenCode))
+        if (dbHandler.matchVerifCode(member.getId(), givenCode)) {
             guild.removeRoleFromMember(member, role).queue();
+        } else {
+            event.getMessage().reply("""
+                    Something went wrong verifying your account! Make sure that the code you entered is correct and that
+                    your message doesn't contain any formatting hints, then try again. If that doesn't work, please try
+                    again in a few minutes. If the problem persists, contact an administrator by DM.
+                    """).queue();
+        }
     }
 }

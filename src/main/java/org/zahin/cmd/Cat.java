@@ -2,44 +2,32 @@ package org.zahin.cmd;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.zahin.Bot;
 import org.zahin.util.CustomEmbed;
 import org.zahin.util.Util;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.ScheduledExecutorService;
 
-public class Cat extends Cmd implements Runnable {
-    private final Dotenv dotenv;
+public class Cat extends Cmd {
     private final ObjectMapper objectMapper;
-    private final ScheduledExecutorService scheduler;
-    private SlashCommandInteractionEvent event;
 
-    public Cat(Dotenv dotenv, ObjectMapper objectMapper, ScheduledExecutorService scheduler) {
-        this.dotenv = dotenv;
+    public Cat(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        this.scheduler = scheduler;
     }
 
     @Override
     public void run(SlashCommandInteractionEvent event) {
-        this.event = event;
-        scheduler.submit(this);
+        cat(event);
     }
 
-    @Override
-    public void run() {
-        cat();
-    }
-
-    private void cat() {
+    private void cat(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
 
         long start = System.nanoTime();
-        String url = "https://api.thecatapi.com/v1/images/search?api_key=" + dotenv.get("CAT_API_KEY");
+        String url = "https://api.thecatapi.com/v1/images/search?api_key=" + Bot.dotenv.get("CAT_API_KEY");
 
         JsonNode node;
         try {
@@ -56,10 +44,10 @@ public class Cat extends Cmd implements Runnable {
         long stop = System.nanoTime();
         double elapsed = (stop - start) / 1_000_000.0;
 
-        CustomEmbed embed = new CustomEmbed(dotenv);
+        CustomEmbed embed = new CustomEmbed();
         embed.setTitle("Cat(s) acquired:");
         // showing how long the operation took could be a security risk in a production environment...
-        if (Boolean.parseBoolean(dotenv.get("ON_MAINTENANCE"))) {
+        if (Boolean.parseBoolean(Bot.dotenv.get("ON_MAINTENANCE"))) {
             embed.setFooter("Cat(s) acquired in " + Util.twoDecFmt.format(elapsed) + " ms");
         }
 

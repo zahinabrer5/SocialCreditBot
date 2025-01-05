@@ -1,8 +1,8 @@
 package org.zahin.cmd;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import org.zahin.Bot;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.util.CustomEmbed;
 
@@ -12,11 +12,9 @@ import java.util.Map;
 
 public class Leaderboard extends Cmd {
     private final DatabaseHandler dbHandler;
-    private final Dotenv dotenv;
 
-    public Leaderboard(DatabaseHandler dbHandler, Dotenv dotenv) {
+    public Leaderboard(DatabaseHandler dbHandler) {
         this.dbHandler = dbHandler;
-        this.dotenv = dotenv;
     }
 
     @Override
@@ -38,8 +36,8 @@ public class Leaderboard extends Cmd {
             return;
         }
 
-        CustomEmbed embed = new CustomEmbed(dotenv);
-        embed.setTitle("Top " + max + " Best Citizens of " + dotenv.get("MAIN_SERVER"));
+        CustomEmbed embed = new CustomEmbed();
+        embed.setTitle("Top " + max + " Best Citizens of " + Bot.dotenv.get("MAIN_SERVER"));
         embed.setColor(0xfcdb00);
 
         Map<String, BigInteger> ranking = dbHandler.getRanking();

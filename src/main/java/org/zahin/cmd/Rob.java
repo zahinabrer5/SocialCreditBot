@@ -1,28 +1,20 @@
 package org.zahin.cmd;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import org.zahin.Bot;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.util.CustomEmbed;
 import org.zahin.util.Util;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Random;
 
 public class Rob extends Cmd {
     private final DatabaseHandler dbHandler;
-    private final Dotenv dotenv;
-    private final Random rand;
-    private final ZoneId z;
 
-    public Rob(DatabaseHandler dbHandler, Dotenv dotenv, Random rand, ZoneId z) {
+    public Rob(DatabaseHandler dbHandler) {
         this.dbHandler = dbHandler;
-        this.dotenv = dotenv;
-        this.rand = rand;
-        this.z = z;
     }
 
     @Override
@@ -35,7 +27,7 @@ public class Rob extends Cmd {
         String robberId = event.getUser().getId();
         String victimId = user.getId();
 
-        if (Util.oneDayCooldown(event, dbHandler.getLastRobUse(robberId), z, "rob"))
+        if (Util.oneDayCooldown(event, dbHandler.getLastRobUse(robberId), Bot.tz, "rob"))
             return;
 
         if (robberId.equals(victimId)) {
@@ -43,7 +35,7 @@ public class Rob extends Cmd {
             return;
         }
 
-        if (victimId.equals(dotenv.get("OWNER_ID")) || victimId.equals(dotenv.get("DEV_ID"))) {
+        if (victimId.equals(Bot.dotenv.get("OWNER_ID")) || victimId.equals(Bot.dotenv.get("DEV_ID"))) {
             event.reply("You can't rob from these guys... NOOB").queue();
             return;
         }
@@ -78,14 +70,14 @@ public class Rob extends Cmd {
 
         // all of the above constraints are set to make it harder for people to exploit /rob and
         // get rich very quickly...
-        BigInteger amount = Util.randomBigInteger(min, max, rand);
+        BigInteger amount = Util.randomBigInteger(min, max, Bot.rand);
 
         dbHandler.update(robberId, amount);
         dbHandler.update(victimId, amount.negate());
 
-        dbHandler.setLastRobUse(robberId, LocalDate.now(z));
+        dbHandler.setLastRobUse(robberId, LocalDate.now(Bot.tz));
 
-        CustomEmbed embed = new CustomEmbed(dotenv);
+        CustomEmbed embed = new CustomEmbed();
         embed.setTitle(String.format("%s just attempted to rob %s...", event.getUser().getName(), user.getName()));
         if (amount.compareTo(BigInteger.ZERO) < 0) {
             embed.setDescription(String.format("Instead, <@%s> got caught by <@%s> and had to pay them **%d** social credit!", robberId, victimId, amount.abs()));

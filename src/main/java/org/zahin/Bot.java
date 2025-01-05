@@ -27,26 +27,23 @@ import org.zahin.db.DatabaseLoader;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 
 public class Bot extends ListenerAdapter {
     public static Instant startTime;
-    private static final Dotenv dotenv = Dotenv.load();
+    public static final Dotenv dotenv = Dotenv.load();
+    public static final Random rand = new Random();
+    public static final ZoneId tz = ZoneId.of("America/Montreal");
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
-    private static final Random rand = new Random();
     private static final Mailer mailer = MailerBuilder
             .withSMTPServer(dotenv.get("SMTP_HOST"), Integer.parseInt(dotenv.get("SMTP_PORT")), dotenv.get("SMTP_USER"), dotenv.get("SMTP_PASS"))
             .buildMailer();
-    private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv, rand, mailer);
+    private static final DatabaseHandler dbHandler = new DatabaseHandler(mailer);
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final ZoneId z = ZoneId.of("America/Montreal");
-    private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static Map<CmdData, Cmd> cmdMap;
 
-    // ToDo: stop using so much constructor dependency injection... it would be less painful to make some of the fields above public
+    // ToDo: directly reply, then event.getHook().editOriginal() (instead of event.deferReply()) -- to get a custom "thinking" message
 
     public static void main(String[] args) {
         buildCmdMap();
@@ -69,6 +66,10 @@ public class Bot extends ListenerAdapter {
         jda.getPresence().setActivity(Activity.customStatus("Observing citizens of " + dotenv.get("MAIN_SERVER")));
         jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
 
+        setUpVerification(jda);
+    }
+
+    private static void setUpVerification(JDA jda) {
         Guild guild = jda.getGuildById(dotenv.get("MAIN_SERVER_ID"));
         MessageChannel channel = guild.getTextChannelById(dotenv.get("VERIFICATION_CHANNEL_ID"));
         Role role = guild.getRoleById(dotenv.get("UNVERIFIED_ROLE_ID"));
@@ -83,15 +84,15 @@ public class Bot extends ListenerAdapter {
                         List.of(new CmdOption(USER, "user", "The user to add or subtract credit from", true),
                                 new CmdOption(INTEGER, "amount", "Amount of credit to add or subtract", true),
                                 new CmdOption(STRING, "reason", "Reason for adding or subtracting credit", false)),
-                        true, false), new Credit(dbHandler, dotenv),
+                        true, false), new Credit(dbHandler),
 
                 new CmdData("leaderboard", "View social credit rankings",
                         List.of(new CmdOption(INTEGER, "max", "Number of users (1 to 20) to display. If not provided, defaults to 10", false)),
-                        true, true), new Leaderboard(dbHandler, dotenv),
+                        true, true), new Leaderboard(dbHandler),
 
                 new CmdData("profile", "View a user's social credit stats",
                         List.of(new CmdOption(USER, "user", "The user to view (if not given, defaults to yourself)", false)),
-                        true, true), new Profile(dbHandler, dotenv),
+                        true, true), new Profile(dbHandler),
 
                 new CmdData("s", "...",
                         List.of(new CmdOption(STRING, "co", "...", true),
@@ -100,7 +101,7 @@ public class Bot extends ListenerAdapter {
 
                 new CmdData("cat", "Acquire a random cat picture",
                         List.of(),
-                        true, true), new Cat(dotenv, objectMapper, scheduler),
+                        true, true), new Cat(objectMapper),
 
                 new CmdData("e", "...",
                         List.of(new CmdOption(STRING, "c", "...", true)),
@@ -108,7 +109,7 @@ public class Bot extends ListenerAdapter {
 
                 new CmdData("t", "...",
                         List.of(new CmdOption(STRING, "p", "...", true)),
-                        true, false), new Tanki(objectMapper, dotenv, scheduler),
+                        true, false), new Tanki(objectMapper),
 
                 new CmdData("free_credits", "Get 9999 free credits!",
                         List.of(),
@@ -116,11 +117,11 @@ public class Bot extends ListenerAdapter {
 
                 new CmdData("rob", "Rob credits from someone else (there's a chance that they catch you in the act and rob you instead!)",
                         List.of(new CmdOption(USER, "user", "User to (try to) rob from", true)),
-                        true, true), new Rob(dbHandler, dotenv, rand, z),
+                        true, true), new Rob(dbHandler),
 
                 new CmdData("daily", "Claim your free daily credits! Timer resets at 12 AM EST",
                         List.of(),
-                        true, true), new Daily(dbHandler, rand, z)
+                        true, true), new Daily(dbHandler)
         );
         // hack to make cmdMap no longer immutable
         cmdMap = new HashMap<>(cmdMap);
@@ -135,12 +136,12 @@ public class Bot extends ListenerAdapter {
                         List.of(new CmdOption(USER, "user", "The user to give credit to", true),
                                 new CmdOption(INTEGER, "amount", "Amount of credit to give (must be positive)", true),
                                 new CmdOption(STRING, "reason", "Reason for giving credit", false)),
-                        true, true), new Give(dbHandler, dotenv)
+                        true, true), new Give(dbHandler)
         );
         cmdMap.put(
                 new CmdData("beg", "Beg for social credits in the chat",
                         List.of(new CmdOption(INTEGER, "amount", "Amount of credit to beg for (must be positive)", true)),
-                        true, true), new Beg(dbHandler, dotenv, rand)
+                        true, true), new Beg(dbHandler)
         );
         cmdMap.put(
                 new CmdData("prune", "Prune (remove) a user from the database",

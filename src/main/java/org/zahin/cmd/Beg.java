@@ -1,9 +1,9 @@
 package org.zahin.cmd;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import org.zahin.Bot;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.util.CustomEmbed;
 import org.zahin.util.Util;
@@ -12,18 +12,13 @@ import java.awt.*;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 public class Beg extends Cmd {
     private static DatabaseHandler dbHandler = null;
-    private final Dotenv dotenv;
     private static final Map<String, SlashCommandInteractionEvent> map = new HashMap<>();
-    private final Random rand;
 
-    public Beg(DatabaseHandler dbHandler, Dotenv dotenv, Random rand) {
+    public Beg(DatabaseHandler dbHandler) {
         Beg.dbHandler = dbHandler;
-        this.dotenv = dotenv;
-        this.rand = rand;
     }
 
     @Override
@@ -38,7 +33,7 @@ public class Beg extends Cmd {
             return;
         }
 
-        CustomEmbed embed = new CustomEmbed(dotenv);
+        CustomEmbed embed = new CustomEmbed();
         embed.setTitle(event.getUser().getName() + " is begging for " + amount + " social credit...");
         embed.setDescription("Press the \"Accept\" button to help <@" + event.getUser().getId() + "> out");
         embed.setThumbnail("https://i.imgur.com/8Ua4Lc8.png");
@@ -56,9 +51,9 @@ public class Beg extends Cmd {
     }
 
     private String generateNonce() {
-        String nonce = Util.randAlphaNum(10, rand);
+        String nonce = Util.randAlphaNum(10, Bot.rand);
         while (map.containsKey(nonce))
-            nonce = Util.randAlphaNum(10, rand);
+            nonce = Util.randAlphaNum(10, Bot.rand);
         return nonce;
     }
 
