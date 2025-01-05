@@ -30,6 +30,8 @@ public class Profile extends Cmd {
     }
 
     private void profile(SlashCommandInteractionEvent event, User user) {
+        event.deferReply().queue();
+
         UserProfile profile = dbHandler.read(user.getId());
 
         CustomEmbed embed = new CustomEmbed(dotenv);
@@ -45,8 +47,6 @@ public class Profile extends Cmd {
 
         String pfp = user.getAvatarUrl();
         int colour = Color.DARK_GRAY.getRGB();
-
-        event.deferReply().queue();
 
         if (pfp != null) {
             colour = Util.mostCommonColour(Util.urlToImage(pfp));

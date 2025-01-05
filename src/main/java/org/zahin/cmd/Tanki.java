@@ -90,6 +90,8 @@ public class Tanki extends Cmd implements Runnable {
     }
 
     private void tanki() {
+        event.deferReply().queue();
+
         String player = event.getOption("p").getAsString();
         String urlStr = "https://ratings.tankionline.com/api/eu/profile/?user=" + player + "&lang=en";
         URL url;
@@ -98,8 +100,6 @@ public class Tanki extends Cmd implements Runnable {
         } catch (URISyntaxException | MalformedURLException e) {
             throw new RuntimeException(e);
         }
-
-        event.deferReply().queue();
 
         int code;
         try {

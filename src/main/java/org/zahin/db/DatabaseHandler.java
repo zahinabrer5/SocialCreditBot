@@ -8,13 +8,16 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class DatabaseHandler {
     private final File databaseFile;
     private final Map<String, UserProfile> userTable = new HashMap<>();
+    private final Random rand;
 
-    public DatabaseHandler(String databaseFile) {
+    public DatabaseHandler(String databaseFile, Random rand) {
         this.databaseFile = new File(databaseFile);
+        this.rand = rand;
     }
 
     public void loadDatabase() {
@@ -127,5 +130,9 @@ public class DatabaseHandler {
         UserProfile profile = userTable.remove(userId);
         saveDatabase();
         return profile;
+    }
+
+    public void saveVerifCode(String id, String schoolEmail) {
+        String code = Util.randAlphaNum(8, rand);
     }
 }

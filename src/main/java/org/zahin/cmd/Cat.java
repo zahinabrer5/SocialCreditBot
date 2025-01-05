@@ -36,10 +36,10 @@ public class Cat extends Cmd implements Runnable {
     }
 
     private void cat() {
+        event.deferReply().queue();
+
         long start = System.nanoTime();
         String url = "https://api.thecatapi.com/v1/images/search?api_key=" + dotenv.get("CAT_API_KEY");
-
-        event.deferReply().queue();
 
         JsonNode node;
         try {

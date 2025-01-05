@@ -6,12 +6,14 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zahin.cmd.*;
@@ -30,57 +32,85 @@ public class Bot extends ListenerAdapter {
     public static Instant startTime;
     private static final Dotenv dotenv = Dotenv.load();
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
-    private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"));
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Random rand = new Random();
+    private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"), rand);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final ZoneId z = ZoneId.of("America/Montreal");
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private static Map<CmdData, Cmd> cmdMap = Map.of(
-            new CmdData("credit", "Add or subtract social credit from a user",
-                    List.of(new CmdOption(USER, "user", "The user to add or subtract credit from", true),
-                            new CmdOption(INTEGER, "amount", "Amount of credit to add or subtract", true),
-                            new CmdOption(STRING, "reason", "Reason for adding or subtracting credit", false)),
-                    true, false), new Credit(dbHandler, dotenv),
-
-            new CmdData("leaderboard", "View social credit rankings",
-                    List.of(new CmdOption(INTEGER, "max", "Number of users (1 to 20) to display. If not provided, defaults to 10", false)),
-                    true, true), new Leaderboard(dbHandler, dotenv),
-
-            new CmdData("profile", "View a user's social credit stats",
-                    List.of(new CmdOption(USER, "user", "The user to view (if not given, defaults to yourself)", false)),
-                    true, true), new Profile(dbHandler, dotenv),
-
-            new CmdData("s", "...",
-                    List.of(new CmdOption(STRING, "co", "...", true),
-                            new CmdOption(CHANNEL, "ch", "...", false)),
-                    true, false), new Say(),
-
-            new CmdData("cat", "Acquire a random cat picture",
-                    List.of(),
-                    true, true), new Cat(dotenv, objectMapper, scheduler),
-
-            new CmdData("e", "...",
-                    List.of(new CmdOption(STRING, "c", "...", true)),
-                    true, false), new Eval(dotenv),
-
-            new CmdData("t", "...",
-                    List.of(new CmdOption(STRING, "p", "...", true)),
-                    true, false), new Tanki(objectMapper, dotenv, scheduler),
-
-            new CmdData("free_credits", "Get 9999 free credits!",
-                    List.of(),
-                    true, true), new FreeCredits(),
-
-            new CmdData("rob", "Rob credits from someone else (there's a chance that they catch you in the act and rob you instead!)",
-                    List.of(new CmdOption(USER, "user", "User to (try to) rob from", true)),
-                    true, true), new Rob(dbHandler, dotenv, rand, z),
-
-            new CmdData("daily", "Claim your free daily credits! Timer resets at 12 AM EST",
-                    List.of(),
-                    true, true), new Daily(dbHandler, rand, z)
-    );
+    private static Map<CmdData, Cmd> cmdMap;
 
     public static void main(String[] args) {
+        buildCmdMap();
+
+        JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), EnumSet.noneOf(GatewayIntent.class)) // slash commands don't need any intents
+                .addEventListeners(new Bot(), new DatabaseLoader(dbHandler), new ButtonListener())
+                .setMemberCachePolicy(MemberCachePolicy.ALL)
+                .build();
+        startTime = Instant.now();
+
+        // These commands might take a few minutes to be active after creation/update/delete
+        CommandListUpdateAction commands = jda.updateCommands();
+
+        commands.addCommands(getSlashCommands());
+
+        // Send the new set of commands to discord, this will override any existing global commands with the new set provided here
+        commands.queue();
+        log.info("Registered slash commands");
+
+        jda.getPresence().setActivity(Activity.customStatus("Observing citizens of " + dotenv.get("MAIN_SERVER")));
+        jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
+
+        Guild guild = jda.getGuildById(dotenv.get("MAIN_SERVER_ID"));
+        Verification verifSystem = new Verification(objectMapper, dbHandler, guild);
+        verifSystem.listenForWebhooks();
+        jda.addEventListener(verifSystem);
+    }
+
+    private static void buildCmdMap() {
+        cmdMap = Map.of(
+                new CmdData("credit", "Add or subtract social credit from a user",
+                        List.of(new CmdOption(USER, "user", "The user to add or subtract credit from", true),
+                                new CmdOption(INTEGER, "amount", "Amount of credit to add or subtract", true),
+                                new CmdOption(STRING, "reason", "Reason for adding or subtracting credit", false)),
+                        true, false), new Credit(dbHandler, dotenv),
+
+                new CmdData("leaderboard", "View social credit rankings",
+                        List.of(new CmdOption(INTEGER, "max", "Number of users (1 to 20) to display. If not provided, defaults to 10", false)),
+                        true, true), new Leaderboard(dbHandler, dotenv),
+
+                new CmdData("profile", "View a user's social credit stats",
+                        List.of(new CmdOption(USER, "user", "The user to view (if not given, defaults to yourself)", false)),
+                        true, true), new Profile(dbHandler, dotenv),
+
+                new CmdData("s", "...",
+                        List.of(new CmdOption(STRING, "co", "...", true),
+                                new CmdOption(CHANNEL, "ch", "...", false)),
+                        true, false), new Say(),
+
+                new CmdData("cat", "Acquire a random cat picture",
+                        List.of(),
+                        true, true), new Cat(dotenv, objectMapper, scheduler),
+
+                new CmdData("e", "...",
+                        List.of(new CmdOption(STRING, "c", "...", true)),
+                        true, false), new Eval(dotenv),
+
+                new CmdData("t", "...",
+                        List.of(new CmdOption(STRING, "p", "...", true)),
+                        true, false), new Tanki(objectMapper, dotenv, scheduler),
+
+                new CmdData("free_credits", "Get 9999 free credits!",
+                        List.of(),
+                        true, true), new FreeCredits(),
+
+                new CmdData("rob", "Rob credits from someone else (there's a chance that they catch you in the act and rob you instead!)",
+                        List.of(new CmdOption(USER, "user", "User to (try to) rob from", true)),
+                        true, true), new Rob(dbHandler, dotenv, rand, z),
+
+                new CmdData("daily", "Claim your free daily credits! Timer resets at 12 AM EST",
+                        List.of(),
+                        true, true), new Daily(dbHandler, rand, z)
+        );
         // hack to make cmdMap no longer immutable
         cmdMap = new HashMap<>(cmdMap);
         // add the 11th (& onwards) commands here, since Map::of only accepts at most 10 key-value pairs, apparently
@@ -106,25 +136,7 @@ public class Bot extends ListenerAdapter {
                         List.of(new CmdOption(USER, "user", "The user to prune", true)),
                         true, false), new Prune(dbHandler)
         );
-
         // ToDo: Verification System
-
-        JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), EnumSet.noneOf(GatewayIntent.class)) // slash commands don't need any intents
-                .addEventListeners(new Bot(), new DatabaseLoader(dbHandler), new ButtonListener())
-                .build();
-        startTime = Instant.now();
-
-        // These commands might take a few minutes to be active after creation/update/delete
-        CommandListUpdateAction commands = jda.updateCommands();
-
-        commands.addCommands(getSlashCommands());
-
-        // Send the new set of commands to discord, this will override any existing global commands with the new set provided here
-        commands.queue();
-        log.info("Registered slash commands");
-
-        jda.getPresence().setActivity(Activity.customStatus("Observing citizens of " + dotenv.get("MAIN_SERVER")));
-        jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
     }
 
     private static List<SlashCommandData> getSlashCommands() {
