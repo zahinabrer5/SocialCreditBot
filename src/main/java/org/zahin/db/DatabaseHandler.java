@@ -1,5 +1,9 @@
 package org.zahin.db;
 
+import io.github.cdimascio.dotenv.Dotenv;
+import org.simplejavamail.api.email.Email;
+import org.simplejavamail.api.mailer.Mailer;
+import org.simplejavamail.email.EmailBuilder;
 import org.zahin.util.Util;
 
 import java.io.*;
@@ -11,17 +15,23 @@ import java.util.Map;
 import java.util.Random;
 
 public class DatabaseHandler {
-    private final File databaseFile;
+    private final File userTableFile;
+    private final File verificationTableFile;
     private final Map<String, UserProfile> userTable = new HashMap<>();
+    private final Map<String, VerificationData> verificationTable = new HashMap<>();
     private final Random rand;
+    private final Mailer mailer;
 
-    public DatabaseHandler(String databaseFile, Random rand) {
-        this.databaseFile = new File(databaseFile);
+    public DatabaseHandler(Dotenv dotenv, Random rand, Mailer mailer) {
         this.rand = rand;
+        this.mailer = mailer;
+
+        userTableFile = new File(dotenv.get("DATABASE_FILE"));
+        verificationTableFile = new File(dotenv.get("VERIFICATION_TABLE_FILE"));
     }
 
     public void loadDatabase() {
-        try (BufferedReader br = new BufferedReader(new FileReader(databaseFile))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(userTableFile))) {
             br.readLine();
             for (String line; (line = br.readLine()) != null; ) {
                 String[] splitted = line.split(",");
@@ -38,10 +48,25 @@ public class DatabaseHandler {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(verificationTableFile))) {
+            br.readLine();
+            for (String line; (line = br.readLine()) != null; ) {
+                String[] splitted = line.split(",");
+                String id = splitted[0];
+                String schoolEmail = splitted[1];
+                String code = splitted[2];
+
+                VerificationData profile = new VerificationData(id, schoolEmail, code);
+                verificationTable.put(id, profile);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void saveDatabase() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(databaseFile, false))) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(userTableFile, false))) {
             bw.write("User ID,Balance,Number of Gains,Number of Losses,Last date /daily used,Last date /rob used,Number of robberies");
             bw.newLine();
             for (Map.Entry<String, UserProfile> entry : userTable.entrySet()) {
@@ -60,6 +85,23 @@ public class DatabaseHandler {
                 bw.write(profile.lastRob().toString());
                 bw.write(",");
                 bw.write(String.valueOf(profile.numRobs()));
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(verificationTableFile, false))) {
+            bw.write("User ID,School Email,Verification Code");
+            bw.newLine();
+            for (Map.Entry<String, VerificationData> entry : verificationTable.entrySet()) {
+                String id = entry.getKey();
+                VerificationData profile = entry.getValue();
+                bw.write(id);
+                bw.write(",");
+                bw.write(profile.schoolEmail());
+                bw.write(",");
+                bw.write(profile.code());
                 bw.newLine();
             }
         } catch (IOException e) {
@@ -133,6 +175,38 @@ public class DatabaseHandler {
     }
 
     public void saveVerifCode(String id, String schoolEmail) {
+        if (verificationTable.containsKey(id))
+            return;
+
         String code = Util.randAlphaNum(8, rand);
+        for (VerificationData datum : verificationTable.values()) {
+            if (datum.schoolEmail().equals(schoolEmail))
+                return;
+            if (datum.code().equals(code))
+                code = Util.randAlphaNum(8, rand);
+        }
+
+        Email email = EmailBuilder.startingBlank()
+                .to(schoolEmail)
+                .withSubject("OC STEM Discord Verification Code")
+                .withHTMLText(String.format("<h1>%s</h1><p>is your verification code for the OC STEM Discord server.</p>", code))
+                .buildEmail();
+        mailer.sendMail(email);
+
+        VerificationData data = new VerificationData(id, schoolEmail, code);
+        verificationTable.put(id, data);
+    }
+
+    public boolean matchVerifCode(String id, String givenCode) {
+        for (Map.Entry<String, VerificationData> entry : verificationTable.entrySet()) {
+            String currId = entry.getKey();
+            String currCode = entry.getValue().code();
+
+            if (currId.equals(id) && currCode.equals(givenCode)) {
+                verificationTable.remove(id);
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -7,6 +7,8 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -14,6 +16,8 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import org.simplejavamail.api.mailer.Mailer;
+import org.simplejavamail.mailer.MailerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zahin.cmd.*;
@@ -33,11 +37,16 @@ public class Bot extends ListenerAdapter {
     private static final Dotenv dotenv = Dotenv.load();
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
     private static final Random rand = new Random();
-    private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv.get("DATABASE_FILE"), rand);
+    private static final Mailer mailer = MailerBuilder
+            .withSMTPServer(dotenv.get("SMTP_HOST"), Integer.parseInt(dotenv.get("SMTP_PORT")), dotenv.get("SMTP_USER"), dotenv.get("SMTP_PASS"))
+            .buildMailer();
+    private static final DatabaseHandler dbHandler = new DatabaseHandler(dotenv, rand, mailer);
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final ZoneId z = ZoneId.of("America/Montreal");
     private static final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private static Map<CmdData, Cmd> cmdMap;
+
+    // ToDo: stop using so much constructor dependency injection... it would be less painful to make some of the fields above public
 
     public static void main(String[] args) {
         buildCmdMap();
@@ -61,7 +70,9 @@ public class Bot extends ListenerAdapter {
         jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
 
         Guild guild = jda.getGuildById(dotenv.get("MAIN_SERVER_ID"));
-        Verification verifSystem = new Verification(objectMapper, dbHandler, guild);
+        MessageChannel channel = guild.getTextChannelById(dotenv.get("VERIFICATION_CHANNEL_ID"));
+        Role role = guild.getRoleById(dotenv.get("UNVERIFIED_ROLE_ID"));
+        Verification verifSystem = new Verification(objectMapper, dbHandler, guild, channel, role);
         verifSystem.listenForWebhooks();
         jda.addEventListener(verifSystem);
     }
@@ -136,7 +147,6 @@ public class Bot extends ListenerAdapter {
                         List.of(new CmdOption(USER, "user", "The user to prune", true)),
                         true, false), new Prune(dbHandler)
         );
-        // ToDo: Verification System
     }
 
     private static List<SlashCommandData> getSlashCommands() {
