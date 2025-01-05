@@ -23,7 +23,7 @@ public class DatabaseHandler {
     public DatabaseHandler(Mailer mailer) {
         this.mailer = mailer;
 
-        userTableFile = new File(Bot.dotenv.get("DATABASE_FILE"));
+        userTableFile = new File(Bot.dotenv.get("USER_TABLE_FILE"));
         verificationTableFile = new File(Bot.dotenv.get("VERIFICATION_TABLE_FILE"));
     }
 

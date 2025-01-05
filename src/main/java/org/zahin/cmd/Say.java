@@ -9,8 +9,8 @@ public class Say extends Cmd {
     @Override
     public void run(SlashCommandInteractionEvent event) {
         // content and channel are required so no null-check here
-        String content = event.getOption("content").getAsString();
-        OptionMapping channelOption = event.getOption("channel");
+        String content = event.getOption("co").getAsString();
+        OptionMapping channelOption = event.getOption("ch");
         Channel channel = event.getMessageChannel();
         if (channelOption != null)
             channel = channelOption.getAsChannel();

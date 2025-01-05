@@ -48,10 +48,15 @@ public class Bot extends ListenerAdapter {
     public static void main(String[] args) {
         buildCmdMap();
 
-        JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), EnumSet.noneOf(GatewayIntent.class)) // slash commands don't need any intents
+        JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), EnumSet.of(GatewayIntent.GUILD_MEMBERS)) // slash commands don't need any intents
                 .addEventListeners(new Bot(), new DatabaseLoader(dbHandler), new ButtonListener())
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .build();
+        try {
+            jda.awaitReady();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         startTime = Instant.now();
 
         // These commands might take a few minutes to be active after creation/update/delete
@@ -66,7 +71,7 @@ public class Bot extends ListenerAdapter {
         jda.getPresence().setActivity(Activity.customStatus("Observing citizens of " + dotenv.get("MAIN_SERVER")));
         jda.getPresence().setStatus(OnlineStatus.DO_NOT_DISTURB);
 
-        setUpVerification(jda);
+//        setUpVerification(jda);
     }
 
     private static void setUpVerification(JDA jda) {
