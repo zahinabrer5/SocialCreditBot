@@ -66,7 +66,6 @@ record TankiRatingsApiResponse(ResponseJsonObj response, HttpResponseType respon
 public class Tanki extends Cmd {
     private static final String[] rankNames = {"Recruit", "Private", "Gefreiter", "Corporal", "Master Corporal", "Sergeant", "Staff Sergeant", "Master Sergeant", "First Sergeant", "Sergeant-Major", "Warrant Officer 1", "Warrant Officer 2", "Warrant Officer 3", "Warrant Officer 4", "Warrant Officer 5", "Third Lieutenant", "Second Lieutenant", "First Lieutenant", "Captain", "Major", "Lieutenant Colonel", "Colonel", "Brigadier", "Major General", "Lieutenant General", "General", "Marshal", "Field Marshal", "Commander", "Generalissimo", "Legend (1)"};
     private final ObjectMapper objectMapper;
-    private SlashCommandInteractionEvent event;
 
     public Tanki(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -111,10 +110,10 @@ public class Tanki extends Cmd {
             return;
         }
 
-        sendEmbeds(apiResponse.response());
+        sendEmbeds(apiResponse.response(), event);
     }
 
-    private void sendEmbeds(ResponseJsonObj resp) {
+    private void sendEmbeds(ResponseJsonObj resp, SlashCommandInteractionEvent event) {
         CustomEmbed embed = new CustomEmbed();
         embed.setTitle(getRank(resp.rank()) + " " + resp.name());
         embed.setUrl("https://ratings.tankionline.com/en/user/" + resp.name());
