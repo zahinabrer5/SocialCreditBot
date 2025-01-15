@@ -160,12 +160,13 @@ public class Util {
     }
 
     public static boolean oneDayCooldown(SlashCommandInteractionEvent event, LocalDate date, ZoneId z, String cmd) {
+        event.deferReply().queue();
         LocalDate today = LocalDate.now(z);
         if (!date.isBefore(today)) {
             ZonedDateTime now = ZonedDateTime.now(z);
             ZonedDateTime tomorrowMidnight = today.plusDays(1).atStartOfDay(z);
             long nanosTillTomorrow = Duration.between(now, tomorrowMidnight).toNanos();
-            event.reply(String.format("You have to wait %s to use `/%s` again...", Util.formatTime(nanosTillTomorrow), cmd)).queue();
+            event.getHook().editOriginal(String.format("You have to wait %s to use `/%s` again...", Util.formatTime(nanosTillTomorrow), cmd)).queue();
             return true;
         }
         return false;
