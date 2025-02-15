@@ -48,8 +48,9 @@ public class Bot extends ListenerAdapter {
     public static void main(String[] args) {
         buildCmdMap();
 
-        JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), EnumSet.of(GatewayIntent.GUILD_MEMBERS)) // slash commands don't need any intents
-                .addEventListeners(new Bot(), new DatabaseLoader(dbHandler), new ButtonListener())
+        Set<GatewayIntent> intents = EnumSet.of(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT);
+        JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), intents)
+                .addEventListeners(new Bot(), new DatabaseLoader(dbHandler), new ButtonListener(), new Backhoe())
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .build();
         try {
