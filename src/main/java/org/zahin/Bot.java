@@ -50,9 +50,10 @@ public class Bot extends ListenerAdapter {
 
         Set<GatewayIntent> intents = EnumSet.of(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT);
         JDA jda = JDABuilder.createLight(dotenv.get("TOKEN"), intents)
-                .addEventListeners(new Bot(), new DatabaseLoader(dbHandler), new ButtonListener(), new Backhoe())
+                .addEventListeners(new Bot(), new DatabaseLoader(dbHandler), new ButtonListener())
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .build();
+        jda.addEventListener(new Backhoe(jda));
         try {
             jda.awaitReady();
         } catch (InterruptedException e) {
