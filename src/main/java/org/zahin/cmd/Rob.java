@@ -24,27 +24,31 @@ public class Rob extends Cmd {
     }
 
     private void rob(SlashCommandInteractionEvent event, User user) {
+        event.reply("Attempting robbery...").queue();
+
         String robberId = event.getUser().getId();
         String victimId = user.getId();
 
-        if (Util.oneDayCooldown(event, dbHandler.getLastRobUse(robberId), Bot.tz, "rob")) {
+        long cooldown = Util.oneDayCooldown(dbHandler.getLastRobUse(robberId), Bot.tz);
+        if (cooldown > 0) {
+            event.getHook().editOriginal(String.format("You must wait %s to use `/rob` again!", Util.formatTime(cooldown))).queue();
             return;
         }
 
         if (robberId.equals(victimId)) {
-            event.reply("You can't rob from yourself, silly!").queue();
+            event.getHook().editOriginal("You can't rob from yourself, silly!").queue();
             return;
         }
 
         if (victimId.equals(Bot.dotenv.get("OWNER_ID")) || victimId.equals(Bot.dotenv.get("DEV_ID"))) {
-            event.reply("You can't rob from these guys... NOOB").queue();
+            event.getHook().editOriginal("You can't rob from these guys... NOOB").queue();
             return;
         }
 
         BigInteger victimBalance = dbHandler.read(victimId).balance();
 
         if (victimBalance.compareTo(BigInteger.valueOf(100)) <= 0) {
-            event.reply("You can't rob from this user since they don't have more than 100 social credit!").queue();
+            event.getHook().editOriginal("You can't rob from this user since they don't have more than 100 social credit!").queue();
             return;
         }
 
@@ -93,6 +97,6 @@ public class Rob extends Cmd {
         }
         embed.appendDescription(String.format("<@%s> now has %d social credit%n", robberId, dbHandler.read(robberId).balance()));
         embed.appendDescription(String.format("<@%s> now has %d social credit", victimId, dbHandler.read(victimId).balance()));
-        event.replyEmbeds(embed.build()).queue();
+        event.getHook().editOriginalEmbeds(embed.build()).queue();
     }
 }

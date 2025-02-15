@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.jetbrains.annotations.NotNull;
 import org.zahin.util.CustomEmbed;
-import org.zahin.util.HttpResponseType;
 import org.zahin.util.Util;
 
 import java.awt.*;
@@ -15,53 +14,6 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-record Rating(int position, int value) {
-}
-
-record WeeklyRatings(Rating crystals, Rating efficiency, Rating golds, Rating score) {
-}
-
-record Supply(String id, String imageUrl, String name, int usages) {
-}
-
-record GameMode(String name, int scoreEarned, long timePlayed, String type) {
-}
-
-record Equipment(int grade, String id, String imageUrl, String name, List<String> properties, int scoreEarned,
-                 long timePlayed) {
-}
-
-record Present(int count, String imageUrl, String name, String prototypeId) {
-}
-
-record ResponseJsonObj(
-        int caughtGolds,
-        int deaths,
-        List<Equipment> dronesPlayed,
-        int earnedCrystals,
-        int gearScore,
-        boolean hasPremium,
-        List<Equipment> hullsPlayed,
-        int kills,
-        List<GameMode> modesPlayed,
-        String name,
-        List<Equipment> paintsPlayed,
-        List<Present> presents,
-        WeeklyRatings previousRating,
-        int rank,
-        WeeklyRatings rating,
-        List<Equipment> resistanceModules,
-        int score,
-        int scoreBase,
-        int scoreNext,
-        List<Supply> suppliesUsage,
-        List<Equipment> turretsPlayed
-) {
-}
-
-record TankiRatingsApiResponse(ResponseJsonObj response, HttpResponseType responseType) {
-}
 
 public class Tanki extends Cmd {
     private static final String[] rankNames = {"Recruit", "Private", "Gefreiter", "Corporal", "Master Corporal", "Sergeant", "Staff Sergeant", "Master Sergeant", "First Sergeant", "Sergeant-Major", "Warrant Officer 1", "Warrant Officer 2", "Warrant Officer 3", "Warrant Officer 4", "Warrant Officer 5", "Third Lieutenant", "Second Lieutenant", "First Lieutenant", "Captain", "Major", "Lieutenant Colonel", "Colonel", "Brigadier", "Major General", "Lieutenant General", "General", "Marshal", "Field Marshal", "Commander", "Generalissimo", "Legend (1)"};
@@ -134,7 +86,7 @@ public class Tanki extends Cmd {
 
     private void sendEmbeds(ResponseJsonObj resp, SlashCommandInteractionEvent event) {
         CustomEmbed embed = new CustomEmbed();
-        embed.setTitle(getRank(resp.rank()) + " " + resp.name());
+        embed.setTitle("__" + getRank(resp.rank()) + " " + resp.name() + "__");
         embed.setUrl("https://ratings.tankionline.com/en/user/" + resp.name());
         embed.setDescription(String.format("%s / %s XP", Util.thousandsSep(resp.score()), Util.thousandsSep(resp.scoreNext())));
         embed.setColor(0x036530);

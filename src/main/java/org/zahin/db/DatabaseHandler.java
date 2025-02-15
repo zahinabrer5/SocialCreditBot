@@ -14,17 +14,20 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class DatabaseHandler {
+    private final Mailer mailer;
     private final File userTableFile;
     private final File verificationTableFile;
-    private final Map<String, UserProfile> userTable = new HashMap<>();
-    private final Map<String, VerificationData> verificationTable = new HashMap<>();
-    private final Mailer mailer;
+    private final Map<String, UserProfile> userTable;
+    private final Map<String, VerificationData> verificationTable;
 
     public DatabaseHandler(Mailer mailer) {
         this.mailer = mailer;
 
         userTableFile = new File(Bot.dotenv.get("USER_TABLE_FILE"));
         verificationTableFile = new File(Bot.dotenv.get("VERIFICATION_TABLE_FILE"));
+
+        userTable = new HashMap<>();
+        verificationTable = new HashMap<>();
     }
 
     public void loadDatabase() {
@@ -148,6 +151,7 @@ public class DatabaseHandler {
         read(userId);
         userTable.computeIfPresent(userId, (id, profile) ->
                 new UserProfile(id, profile.balance(), profile.numGain(), profile.numLoss(), date, profile.lastRob(), profile.numRobs()));
+        System.out.println(userTable.get(userId));
     }
 
     public LocalDate getLastRobUse(String userId) {

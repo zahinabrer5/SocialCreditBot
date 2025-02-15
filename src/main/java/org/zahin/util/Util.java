@@ -1,7 +1,5 @@
 package org.zahin.util;
 
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -162,17 +160,14 @@ public class Util {
         return salt.toString();
     }
 
-    public static boolean oneDayCooldown(SlashCommandInteractionEvent event, LocalDate date, ZoneId z, String cmd) {
-        event.deferReply().queue();
+    public static long oneDayCooldown(LocalDate date, ZoneId z) {
         LocalDate today = LocalDate.now(z);
         if (!date.isBefore(today)) {
             ZonedDateTime now = ZonedDateTime.now(z);
             ZonedDateTime tomorrowMidnight = today.plusDays(1).atStartOfDay(z);
-            long nanosTillTomorrow = Duration.between(now, tomorrowMidnight).toNanos();
-            event.getHook().editOriginal(String.format("You have to wait %s to use `/%s` again...", Util.formatTime(nanosTillTomorrow), cmd)).queue();
-            return true;
+            return Duration.between(now, tomorrowMidnight).toNanos();
         }
-        return false;
+        return 0;
     }
 
     public static BigInteger scaleBigInteger(BigInteger bi, double scalar) {

@@ -207,6 +207,8 @@ public class Bot extends ListenerAdapter {
                 }
 
                 cmd.run(event);
+                dbHandler.saveDatabase(); // for now, call this directly after running every command
+                // it's quick and dirty since I can't seem to get DatabaseLoader working :/
             }
         }
         if (!found) {

@@ -24,7 +24,7 @@ public class Cat extends Cmd {
     }
 
     private void cat(SlashCommandInteractionEvent event) {
-        event.deferReply().queue();
+        event.reply("Looking for kitties...").queue();
 
         long start = System.nanoTime();
         String url = "https://api.thecatapi.com/v1/images/search?api_key=" + Bot.dotenv.get("CAT_API_KEY");
@@ -63,6 +63,7 @@ public class Cat extends Cmd {
             return;
         }
         embed.setImage(retrievedCatUrl);
+        event.getHook().editOriginal("Found them! :3").queue();
         event.getHook().editOriginalEmbeds(embed.build()).queue();
     }
 }

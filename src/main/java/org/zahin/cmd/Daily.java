@@ -21,9 +21,13 @@ public class Daily extends Cmd {
     }
 
     private void daily(SlashCommandInteractionEvent event) {
+        event.reply("Checking cooldown...").queue();
+
         String userId = event.getUser().getId();
 
-        if (Util.oneDayCooldown(event, dbHandler.getLastDailyUse(userId), Bot.tz, "daily")) {
+        long cooldown = Util.oneDayCooldown(dbHandler.getLastDailyUse(userId), Bot.tz);
+        if (cooldown > 0) {
+            event.getHook().editOriginal(String.format("You must wait %s to use `/daily` again!", Util.formatTime(cooldown))).queue();
             return;
         }
 
