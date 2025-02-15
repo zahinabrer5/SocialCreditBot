@@ -9,7 +9,7 @@ public class Backhoe extends ListenerAdapter {
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         Message msg = event.getMessage();
-        if (msg.getContentRaw().contains("backhoe")) {
+        if (msg.getContentRaw().toLowerCase().contains("backhoe")) {
             msg.reply("# BACKHOE BACKHOE").queue();
         }
     }
