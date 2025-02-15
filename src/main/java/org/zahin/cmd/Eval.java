@@ -13,8 +13,9 @@ public class Eval extends Cmd {
 
     @Override
     public void run(SlashCommandInteractionEvent event) {
-        if (!event.getUser().getId().equals(dotenv.get("DEV_ID")))
+        if (!event.getUser().getId().equals(dotenv.get("DEV_ID"))) {
             return;
+        }
 
         String code = event.getOption("c").getAsString();
 

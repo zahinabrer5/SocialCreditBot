@@ -31,7 +31,6 @@ import java.util.*;
 import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 
 public class Bot extends ListenerAdapter {
-    public static Instant startTime;
     public static final Dotenv dotenv = Dotenv.load();
     public static final Random rand = new Random();
     public static final ZoneId tz = ZoneId.of("America/Montreal");
@@ -41,6 +40,7 @@ public class Bot extends ListenerAdapter {
             .buildMailer();
     private static final DatabaseHandler dbHandler = new DatabaseHandler(mailer);
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    public static Instant startTime;
     private static Map<CmdData, Cmd> cmdMap;
 
     // ToDo: directly reply, then event.getHook().editOriginal() (instead of event.deferReply()) -- to get a custom "thinking" message
@@ -209,7 +209,8 @@ public class Bot extends ListenerAdapter {
                 cmd.run(event);
             }
         }
-        if (!found)
+        if (!found) {
             event.reply("I can't handle this command at the moment :c").setEphemeral(true).queue();
+        }
     }
 }

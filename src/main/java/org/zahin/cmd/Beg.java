@@ -14,11 +14,36 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Beg extends Cmd {
-    private static DatabaseHandler dbHandler = null;
     private static final Map<String, SlashCommandInteractionEvent> map = new HashMap<>();
+    private static DatabaseHandler dbHandler = null;
 
     public Beg(DatabaseHandler dbHandler) {
         Beg.dbHandler = dbHandler;
+    }
+
+    public static void resolveDonation(ButtonInteractionEvent buttonEvent) {
+        if (dbHandler == null) {
+            return;
+        }
+
+        String nonce = buttonEvent.getComponentId();
+        for (Map.Entry<String, SlashCommandInteractionEvent> entry : map.entrySet()) {
+            if (nonce.equals(entry.getKey())) {
+                SlashCommandInteractionEvent slashEvent = entry.getValue();
+                String giverId = buttonEvent.getUser().getId();
+                String receiverId = slashEvent.getUser().getId();
+                if (giverId.equals(receiverId)) {
+                    return;
+                }
+                BigInteger amount = BigInteger.valueOf(slashEvent.getOption("amount").getAsLong());
+
+                dbHandler.update(receiverId, amount);
+                dbHandler.update(giverId, amount.negate());
+
+                buttonEvent.reply(String.format("<@%s> just donated %d social credit to <@%s>!", giverId, amount, receiverId)).queue();
+                map.remove(nonce);
+            }
+        }
     }
 
     @Override
@@ -52,29 +77,9 @@ public class Beg extends Cmd {
 
     private String generateNonce() {
         String nonce = Util.randAlphaNum(10, Bot.rand);
-        while (map.containsKey(nonce))
+        while (map.containsKey(nonce)) {
             nonce = Util.randAlphaNum(10, Bot.rand);
-        return nonce;
-    }
-
-    public static void resolveDonation(ButtonInteractionEvent buttonEvent) {
-        if (dbHandler == null) return;
-
-        String nonce = buttonEvent.getComponentId();
-        for (Map.Entry<String, SlashCommandInteractionEvent> entry : map.entrySet()) {
-            if (nonce.equals(entry.getKey())) {
-                SlashCommandInteractionEvent slashEvent = entry.getValue();
-                String giverId = buttonEvent.getUser().getId();
-                String receiverId = slashEvent.getUser().getId();
-                if (giverId.equals(receiverId)) return;
-                BigInteger amount = BigInteger.valueOf(slashEvent.getOption("amount").getAsLong());
-
-                dbHandler.update(receiverId, amount);
-                dbHandler.update(giverId, amount.negate());
-
-                buttonEvent.reply(String.format("<@%s> just donated %d social credit to <@%s>!", giverId, amount, receiverId)).queue();
-                map.remove(nonce);
-            }
         }
+        return nonce;
     }
 }

@@ -24,8 +24,9 @@ public class Credit extends Cmd {
         // however, we must do null-check on "reason" option since it's optional
         String reason = "";
         OptionMapping reasonOption = event.getOption("reason");
-        if (reasonOption != null)
+        if (reasonOption != null) {
             reason = reasonOption.getAsString();
+        }
         credit(event, user, BigInteger.valueOf(amount), reason);
     }
 
@@ -35,8 +36,9 @@ public class Credit extends Cmd {
             return;
         }
 
-        if (!reason.isEmpty())
+        if (!reason.isEmpty()) {
             reason = String.format("**__Reason:__** %s%n%n", reason);
+        }
 
         String userId = user.getId();
         dbHandler.update(userId, amount);

@@ -45,8 +45,9 @@ public class Util {
         list.sort(Entry.comparingByValue());
 
         Map<K, V> result = new LinkedHashMap<>();
-        for (Entry<K, V> entry : list)
+        for (Entry<K, V> entry : list) {
             result.put(entry.getKey(), entry.getValue());
+        }
 
         return result;
     }
@@ -68,8 +69,9 @@ public class Util {
      * @return The converted BufferedImage
      */
     public static BufferedImage toBufferedImage(Image img) {
-        if (img instanceof BufferedImage)
+        if (img instanceof BufferedImage) {
             return (BufferedImage) img;
+        }
 
         // Create a buffered image with transparency
         BufferedImage bimage = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_ARGB);
@@ -92,8 +94,9 @@ public class Util {
     public static String urlContentToString(String requestURL) {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new URI(requestURL).toURL().openStream()))) {
             StringBuilder sb = new StringBuilder();
-            for (String line; (line = br.readLine()) != null; )
+            for (String line; (line = br.readLine()) != null; ) {
                 sb.append(line);
+            }
             return sb.toString();
         } catch (URISyntaxException | IOException e) {
             throw new RuntimeException(e);

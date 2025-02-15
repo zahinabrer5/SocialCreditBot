@@ -120,10 +120,11 @@ public class DatabaseHandler {
         BigInteger balance = profile.balance().add(amount);
         int numGain = profile.numGain();
         int numLoss = profile.numLoss();
-        if (amount.signum() > 0)
+        if (amount.signum() > 0) {
             numGain++;
-        else
+        } else {
             numLoss++;
+        }
         UserProfile updatedProfile = new UserProfile(id, balance, numGain, numLoss, profile.lastDaily(), profile.lastRob(), profile.numRobs());
         userTable.put(id, updatedProfile);
         saveDatabase();
@@ -132,8 +133,9 @@ public class DatabaseHandler {
     public Map<String, BigInteger> getRanking() {
         Map<String, UserProfile> sorted = Util.sortByValue(userTable);
         Map<String, BigInteger> result = new LinkedHashMap<>();
-        for (Map.Entry<String, UserProfile> entry : sorted.entrySet())
+        for (Map.Entry<String, UserProfile> entry : sorted.entrySet()) {
             result.put(entry.getKey(), entry.getValue().balance());
+        }
         return result;
     }
 
@@ -172,15 +174,18 @@ public class DatabaseHandler {
     }
 
     public void saveVerifCode(String id, String schoolEmail) {
-        if (verificationTable.containsKey(id))
+        if (verificationTable.containsKey(id)) {
             return;
+        }
 
         String code = Util.randAlphaNum(8, Bot.rand);
         for (VerificationData datum : verificationTable.values()) {
-            if (datum.schoolEmail().equals(schoolEmail))
+            if (datum.schoolEmail().equals(schoolEmail)) {
                 return;
-            if (datum.code().equals(code))
+            }
+            if (datum.code().equals(code)) {
                 code = Util.randAlphaNum(8, Bot.rand);
+            }
         }
 
         Email email = EmailBuilder.startingBlank()

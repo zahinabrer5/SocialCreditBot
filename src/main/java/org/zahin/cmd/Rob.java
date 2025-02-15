@@ -27,8 +27,9 @@ public class Rob extends Cmd {
         String robberId = event.getUser().getId();
         String victimId = user.getId();
 
-        if (Util.oneDayCooldown(event, dbHandler.getLastRobUse(robberId), Bot.tz, "rob"))
+        if (Util.oneDayCooldown(event, dbHandler.getLastRobUse(robberId), Bot.tz, "rob")) {
             return;
+        }
 
         if (robberId.equals(victimId)) {
             event.reply("You can't rob from yourself, silly!").queue();
@@ -60,13 +61,15 @@ public class Rob extends Cmd {
         BigInteger robberBalance = dbHandler.read(robberId).balance();
         BigInteger balanceDiff = robberBalance.subtract(victimBalance).abs();
         BigInteger maxScaled = Util.scaleBigInteger(victimBalance, 0.1);
-        if (balanceDiff.compareTo(BigInteger.valueOf(1000)) >= 0 && maxScaled.compareTo(max) < 0)
+        if (balanceDiff.compareTo(BigInteger.valueOf(1000)) >= 0 && maxScaled.compareTo(max) < 0) {
             max = maxScaled;
+        }
 
         // set a hard maximum possible rob of 500 social credit
         BigInteger fiveHundred = BigInteger.valueOf(500);
-        if (max.compareTo(fiveHundred) > 0)
+        if (max.compareTo(fiveHundred) > 0) {
             max = fiveHundred;
+        }
 
         // all of the above constraints are set to make it harder for people to exploit /rob and
         // get rich very quickly...
