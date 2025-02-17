@@ -53,7 +53,7 @@ public class Bot extends ListenerAdapter {
                 .addEventListeners(new Bot(), new DatabaseLoader(dbHandler), new ButtonListener())
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .build();
-        jda.addEventListener(new Backhoe(jda));
+        jda.addEventListener(new ReplyOnTrigger(jda, dbHandler));
         try {
             jda.awaitReady();
         } catch (InterruptedException e) {

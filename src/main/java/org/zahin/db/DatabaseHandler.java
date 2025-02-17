@@ -17,17 +17,21 @@ public class DatabaseHandler {
     private final Mailer mailer;
     private final File userTableFile;
     private final File verificationTableFile;
+    private final File replyTableFile;
     private final Map<String, UserProfile> userTable;
     private final Map<String, VerificationData> verificationTable;
+    private final Map<String, String> replyTable;
 
     public DatabaseHandler(Mailer mailer) {
         this.mailer = mailer;
 
         userTableFile = new File(Bot.dotenv.get("USER_TABLE_FILE"));
         verificationTableFile = new File(Bot.dotenv.get("VERIFICATION_TABLE_FILE"));
+        replyTableFile = new File(Bot.dotenv.get("REPLY_TABLE_FILE"));
 
         userTable = new HashMap<>();
         verificationTable = new HashMap<>();
+        replyTable = new HashMap<>();
     }
 
     public void loadDatabase() {
@@ -42,6 +46,7 @@ public class DatabaseHandler {
                 LocalDate lastDaily = LocalDate.parse(splitted[4]);
                 LocalDate lastRob = LocalDate.parse(splitted[5]);
                 int numRobs = Integer.parseInt(splitted[6]);
+
                 UserProfile profile = new UserProfile(id, balance, numGain, numLoss, lastDaily, lastRob, numRobs);
                 userTable.put(id, profile);
             }
@@ -57,8 +62,21 @@ public class DatabaseHandler {
                 String schoolEmail = splitted[1];
                 String code = splitted[2];
 
-                VerificationData profile = new VerificationData(id, schoolEmail, code);
-                verificationTable.put(id, profile);
+                VerificationData data = new VerificationData(id, schoolEmail, code);
+                verificationTable.put(id, data);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(replyTableFile))) {
+            br.readLine();
+            for (String line; (line = br.readLine()) != null; ) {
+                String[] splitted = line.split(",");
+                String trigger = splitted[0];
+                String reply = splitted[1];
+
+                replyTable.put(trigger, reply);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -214,5 +232,9 @@ public class DatabaseHandler {
             }
         }
         return false;
+    }
+
+    public Map<String, String> getReplyTable() {
+        return replyTable;
     }
 }
