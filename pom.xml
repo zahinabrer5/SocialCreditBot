@@ -18,7 +18,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.2.1</version> <!-- replace $version with the latest version -->
+            <version>6.1.0</version> <!-- replace $version with the latest version -->
             <exclusions>
                 <exclusion>
                     <groupId>club.minnced</groupId>
@@ -31,7 +31,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.5.13</version>
+            <version>1.5.20</version>
             <!--            <scope>test</scope>-->
         </dependency>
 
@@ -52,7 +52,7 @@
         <dependency>
             <groupId>io.javalin</groupId>
             <artifactId>javalin</artifactId>
-            <version>6.4.0</version>
+            <version>6.7.0</version>
         </dependency>
 
         <dependency>
