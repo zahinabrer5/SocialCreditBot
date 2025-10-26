@@ -33,17 +33,18 @@ import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 public class Bot extends ListenerAdapter {
     public static final Dotenv dotenv = Dotenv.load();
     public static final Random rand = new Random();
-    public static final ZoneId tz = ZoneId.of("America/Montreal");
+    public static final ZoneId tz = ZoneId.of(dotenv.get("TIMEZONE"));
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
-    private static final Mailer mailer = MailerBuilder
-            .withSMTPServer(dotenv.get("SMTP_HOST"), Integer.parseInt(dotenv.get("SMTP_PORT")), dotenv.get("SMTP_USER"), dotenv.get("SMTP_PASS"))
-            .buildMailer();
-    private static final DatabaseHandler dbHandler = new DatabaseHandler(mailer);
+//    private static final Mailer mailer = MailerBuilder
+//            .withSMTPServer(dotenv.get("SMTP_HOST"), Integer.parseInt(dotenv.get("SMTP_PORT")), dotenv.get("SMTP_USER"), dotenv.get("SMTP_PASS"))
+//            .buildMailer();
+    private static final DatabaseHandler dbHandler = new DatabaseHandler(/*mailer*/);
     private static final ObjectMapper objectMapper = new ObjectMapper();
     public static Instant startTime;
     private static Map<CmdData, Cmd> cmdMap;
 
     // ToDo: directly reply, then event.getHook().editOriginal() (instead of event.deferReply()) -- to get a custom "thinking" message
+    // ToDo: CHANGE THE ENTIRE CODE BASE TO USE JDA COMMAND HANDLER
 
     public static void main(String[] args) {
         buildCmdMap();

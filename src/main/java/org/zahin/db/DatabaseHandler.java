@@ -14,7 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class DatabaseHandler {
-    private final Mailer mailer;
+//    private final Mailer mailer;
     private final File userTableFile;
     private final File verificationTableFile;
     private final File replyTableFile;
@@ -22,8 +22,8 @@ public class DatabaseHandler {
     private final Map<String, VerificationData> verificationTable;
     private final Map<String, String> replyTable;
 
-    public DatabaseHandler(Mailer mailer) {
-        this.mailer = mailer;
+    public DatabaseHandler(/*Mailer mailer*/) {
+//        this.mailer = mailer;
 
         userTableFile = new File(Bot.dotenv.get("USER_TABLE_FILE"));
         verificationTableFile = new File(Bot.dotenv.get("VERIFICATION_TABLE_FILE"));
@@ -210,12 +210,12 @@ public class DatabaseHandler {
             }
         }
 
-        Email email = EmailBuilder.startingBlank()
-                .to(schoolEmail)
-                .withSubject("OC STEM Discord Verification Code")
-                .withHTMLText(String.format("<h1>%s</h1><p>is your verification code for the OC STEM Discord server.</p>", code))
-                .buildEmail();
-        mailer.sendMail(email);
+//        Email email = EmailBuilder.startingBlank()
+//                .to(schoolEmail)
+//                .withSubject("OC STEM Discord Verification Code")
+//                .withHTMLText(String.format("<h1>%s</h1><p>is your verification code for the OC STEM Discord server.</p>", code))
+//                .buildEmail();
+//        mailer.sendMail(email);
 
         VerificationData data = new VerificationData(id, schoolEmail, code);
         verificationTable.put(id, data);
