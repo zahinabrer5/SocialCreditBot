@@ -12,9 +12,8 @@ public class Say extends Cmd {
         String content = event.getOption("co").getAsString();
         OptionMapping channelOption = event.getOption("ch");
         Channel channel = event.getMessageChannel();
-        if (channelOption != null) {
+        if (channelOption != null)
             channel = channelOption.getAsChannel();
-        }
         say(event, content, channel);
     }
 

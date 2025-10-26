@@ -7,9 +7,11 @@ import org.zahin.util.Util;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.util.Random;
 
 public class Daily extends Cmd {
     private final DatabaseHandler dbHandler;
+    private static final Random rand = new Random();
 
     public Daily(DatabaseHandler dbHandler) {
         this.dbHandler = dbHandler;
@@ -31,7 +33,7 @@ public class Daily extends Cmd {
             return;
         }
 
-        BigInteger amount = Util.randomBigInteger(BigInteger.ZERO, BigInteger.valueOf(100), Bot.rand);
+        BigInteger amount = Util.randomBigInteger(BigInteger.ZERO, BigInteger.valueOf(100), rand);
         dbHandler.update(userId, amount);
 
         dbHandler.setLastDailyUse(userId, LocalDate.now(Bot.tz));

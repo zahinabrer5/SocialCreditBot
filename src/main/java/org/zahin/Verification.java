@@ -44,16 +44,14 @@ public class Verification extends ListenerAdapter {
     }
 
     public void verifyUser(String discordUser, String schoolEmail) {
-        if (discordUser.isBlank() || schoolEmail.isBlank()) {
+        if (discordUser.isBlank() || schoolEmail.isBlank())
             return;
-        }
 
         // check if user with given username exists in the server
         // bots have actual tags, so they can't be verified
         Member member = guild.getMemberByTag(discordUser, "0000");
-        if (member == null) {
+        if (member == null)
             return;
-        }
 
         JsonNode allowedDomains;
         try {
@@ -61,11 +59,9 @@ public class Verification extends ListenerAdapter {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
-        for (int i = 0; i < allowedDomains.size(); i++) {
-            if (!schoolEmail.endsWith("@" + allowedDomains.get(i))) {
+        for (int i = 0; i < allowedDomains.size(); i++)
+            if (!schoolEmail.endsWith("@" + allowedDomains.get(i)))
                 return;
-            }
-        }
 
         dbHandler.saveVerifCode(member.getId(), schoolEmail);
     }
@@ -73,30 +69,26 @@ public class Verification extends ListenerAdapter {
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         // check that we're in the correct server
-        if (!event.getGuild().equals(guild)) {
+        if (!event.getGuild().equals(guild))
             return;
-        }
 
         // check that the message is in the #verification channel
-        if (!event.getMessage().getChannelId().equals(channel.getId())) {
+        if (!event.getMessage().getChannelId().equals(channel.getId()))
             return;
-        }
 
         // exit if user doesn't have @Unverified role
         Member member = event.getMember();
-        if (!member.getRoles().contains(role)) {
+        if (!member.getRoles().contains(role))
             return;
-        }
 
         String givenCode = event.getMessage().getContentStripped();
-        if (dbHandler.matchVerifCode(member.getId(), givenCode)) {
+        if (dbHandler.matchVerifCode(member.getId(), givenCode))
             guild.removeRoleFromMember(member, role).queue();
-        } else {
+        else
             event.getMessage().reply("""
                     Something went wrong verifying your account! Make sure that the code you entered is correct and that
                     your message doesn't contain any formatting hints, then try again. If that doesn't work, please try
                     again in a few minutes. If the problem persists, contact an administrator by DM.
                     """).queue();
-        }
     }
 }

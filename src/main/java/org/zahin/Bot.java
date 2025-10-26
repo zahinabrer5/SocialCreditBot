@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -32,7 +33,6 @@ import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 
 public class Bot extends ListenerAdapter {
     public static final Dotenv dotenv = Dotenv.load();
-    public static final Random rand = new Random();
     public static final ZoneId tz = ZoneId.of(dotenv.get("TIMEZONE"));
     private static final Logger log = LoggerFactory.getLogger(Bot.class);
 //    private static final Mailer mailer = MailerBuilder
@@ -164,7 +164,7 @@ public class Bot extends ListenerAdapter {
             SlashCommandData slashCmd = Commands.slash(key.name(), key.description());
             key.options().forEach(option ->
                     slashCmd.addOption(option.optionType(), option.name(), option.description(), option.required()));
-            slashCmd.setGuildOnly(key.guildOnly());
+            slashCmd.setContexts(InteractionContextType.GUILD);
             result.add(slashCmd);
         });
         return result;

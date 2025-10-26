@@ -1,8 +1,9 @@
 package org.zahin.cmd;
 
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.components.buttons.Button;
 import org.zahin.Bot;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.util.CustomEmbed;
@@ -12,19 +13,19 @@ import java.awt.*;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class Beg extends Cmd {
     private static final Map<String, SlashCommandInteractionEvent> map = new HashMap<>();
     private static DatabaseHandler dbHandler = null;
+    private static final Random rand = new Random();
 
     public Beg(DatabaseHandler dbHandler) {
         Beg.dbHandler = dbHandler;
     }
 
     public static void resolveDonation(ButtonInteractionEvent buttonEvent) {
-        if (dbHandler == null) {
-            return;
-        }
+        if (dbHandler == null) return;
 
         String nonce = buttonEvent.getComponentId();
         for (Map.Entry<String, SlashCommandInteractionEvent> entry : map.entrySet()) {
@@ -32,9 +33,7 @@ public class Beg extends Cmd {
                 SlashCommandInteractionEvent slashEvent = entry.getValue();
                 String giverId = buttonEvent.getUser().getId();
                 String receiverId = slashEvent.getUser().getId();
-                if (giverId.equals(receiverId)) {
-                    return;
-                }
+                if (giverId.equals(receiverId)) return;
                 BigInteger amount = BigInteger.valueOf(slashEvent.getOption("amount").getAsLong());
 
                 dbHandler.update(receiverId, amount);
@@ -66,9 +65,8 @@ public class Beg extends Cmd {
 
         String nonce = "accept-" + generateNonce();
 
-        event.getMessageChannel().sendMessageEmbeds(embed.build()).addActionRow(
-                Button.primary(nonce, "Accept")
-        ).setNonce(nonce).queue();
+        ActionRow ar = ActionRow.of(Button.primary(nonce, "Accept"));
+        event.getMessageChannel().sendMessageEmbeds(embed.build()).addComponents(ar).setNonce(nonce).queue();
 
         map.put(nonce, event);
 
@@ -76,10 +74,9 @@ public class Beg extends Cmd {
     }
 
     private String generateNonce() {
-        String nonce = Util.randAlphaNum(10, Bot.rand);
-        while (map.containsKey(nonce)) {
-            nonce = Util.randAlphaNum(10, Bot.rand);
-        }
+        String nonce = Util.randAlphaNum(10, rand);
+        while (map.containsKey(nonce))
+            nonce = Util.randAlphaNum(10, rand);
         return nonce;
     }
 }

@@ -114,32 +114,24 @@ public class Tanki extends Cmd {
         embed.addField("Gear Score", "**" + resp.gearScore() + "**", true);
 
         embed.addField("", "**__Most Used Equipment/Gear__**", false);
-        if (!resp.turretsPlayed().isEmpty()) {
+        if (!resp.turretsPlayed().isEmpty())
             embed.addField("Turret", getFavEquipment(resp.turretsPlayed()), true);
-        }
-        if (!resp.hullsPlayed().isEmpty()) {
+        if (!resp.hullsPlayed().isEmpty())
             embed.addField("Hull", getFavEquipment(resp.hullsPlayed()), true);
-        }
-        if (!resp.dronesPlayed().isEmpty()) {
+        if (!resp.dronesPlayed().isEmpty())
             embed.addField("Drone", getFavEquipment(resp.dronesPlayed()), true);
-        }
-        if (!resp.resistanceModules().isEmpty()) {
+        if (!resp.resistanceModules().isEmpty())
             embed.addField("Module", getFavEquipment(resp.resistanceModules()), true);
-        }
-        if (!resp.paintsPlayed().isEmpty()) {
+        if (!resp.paintsPlayed().isEmpty())
             embed.addField("Paint", getFavEquipment(resp.paintsPlayed()), true);
-        }
-        if (!resp.suppliesUsage().isEmpty()) {
+        if (!resp.suppliesUsage().isEmpty())
             embed.addField("Supply", getFavSupply(resp.suppliesUsage()), true);
-        }
 
         embed.addField("", "**__Other__**", false);
-        if (!resp.modesPlayed().isEmpty()) {
+        if (!resp.modesPlayed().isEmpty())
             embed.addField("Favourite Game Mode", getFavMode(resp.modesPlayed()), true);
-        }
-        if (!resp.presents().isEmpty()) {
+        if (!resp.presents().isEmpty())
             embed.addField("Gifts", getGiftsInfo(resp.presents()), true);
-        }
 
         embed.setFooter("View on desktop for better embed formatting");
 
@@ -164,11 +156,9 @@ public class Tanki extends Cmd {
         int total = presents.stream().mapToInt(Present::count).sum();
 
         Present popularGift = presents.getFirst();
-        for (Present present : presents) {
-            if (present.count() > popularGift.count()) {
+        for (Present present : presents)
+            if (present.count() > popularGift.count())
                 popularGift = present;
-            }
-        }
 
         String name = popularGift.name();
         int count = popularGift.count();
@@ -177,11 +167,9 @@ public class Tanki extends Cmd {
 
     private String getFavMode(List<GameMode> gameModes) {
         GameMode favMode = gameModes.getFirst();
-        for (GameMode mode : gameModes) {
-            if (mode.timePlayed() > favMode.timePlayed()) {
+        for (GameMode mode : gameModes)
+            if (mode.timePlayed() > favMode.timePlayed())
                 favMode = mode;
-            }
-        }
 
         String name = favMode.name();
         String type = favMode.type();
@@ -199,18 +187,16 @@ public class Tanki extends Cmd {
         for (Map.Entry<String, Equipment> entry : map.entrySet()) {
             Equipment eq = entry.getValue();
 
-            if (eq.timePlayed() > favEq.timePlayed()) {
+            if (eq.timePlayed() > favEq.timePlayed())
                 favEq = eq;
-            }
         }
 
         String name = favEq.name();
         String hours = Util.oneDecFmt.format(favEq.timePlayed() / 3600.0 / 1000);
         String xp = Util.thousandsSep(favEq.scoreEarned());
 
-        if (equipment.getFirst().grade() < 0) {
+        if (equipment.getFirst().grade() < 0)
             return String.format("%s - %s hours, %s XP", name, hours, xp);
-        }
 
         int grade = equipment.stream()
                 .filter(eq -> eq.name().equals(name))
@@ -221,9 +207,8 @@ public class Tanki extends Cmd {
 
     private String getWeeklyRatingsTable(ResponseJsonObj resp) {
         WeeklyRatings weeklyRatings = resp.rating();
-        if (weeklyRatings == null) {
+        if (weeklyRatings == null)
             return "No weekly ratings; there might be previous ratings";
-        }
 
         String[] xpRow = getRatingRow(weeklyRatings.score(), false);
         String[] gbRow = getRatingRow(weeklyRatings.golds(), false);
@@ -258,9 +243,8 @@ public class Tanki extends Cmd {
     private String[] getRatingRow(Rating rating, boolean ef) {
         String pos = "-", val = "-";
         if (rating != null) {
-            if (rating.position() > 0) {
+            if (rating.position() > 0)
                 pos = ("#" + Util.thousandsSep(rating.position()));
-            }
             if (rating.value() > 0) {
                 long valAsLong = ef ? Math.round(rating.value() / 100.0) : rating.value();
                 val = Util.thousandsSep(valAsLong);
@@ -272,9 +256,8 @@ public class Tanki extends Cmd {
     private String getPrevRating(Rating prevRating, boolean ef) {
         String prev = "-";
         if (prevRating != null) {
-            if (prevRating.value() < 1) {
+            if (prevRating.value() < 1)
                 return prev;
-            }
             long prevAsLong = ef ? Math.round(prevRating.value() / 100.0) : prevRating.value();
             prev = Util.thousandsSep(prevAsLong);
         }
@@ -282,34 +265,28 @@ public class Tanki extends Cmd {
     }
 
     private long getHours(List<GameMode> modes) {
-        if (modes.isEmpty()) {
+        if (modes.isEmpty())
             return 0;
-        }
         return Util.millisToHours(modes.stream().mapToLong(GameMode::timePlayed).sum());
     }
 
     private String getRank(int rawRank) {
-        if (rawRank <= rankNames.length) {
+        if (rawRank <= rankNames.length)
             return rankNames[rawRank - 1];
-        }
-
         return "Legend " + (rawRank - rankNames.length + 1);
     }
 
     private int getTotalSuppliesUsed(List<Supply> supplies) {
-        if (supplies.isEmpty()) {
+        if (supplies.isEmpty())
             return 0;
-        }
         return supplies.stream().mapToInt(Supply::usages).sum();
     }
 
     private String getFavSupply(List<Supply> supplies) {
         Supply mostUsed = supplies.getFirst();
-        for (Supply supply : supplies) {
-            if (supply.usages() > mostUsed.usages()) {
+        for (Supply supply : supplies)
+            if (supply.usages() > mostUsed.usages())
                 mostUsed = supply;
-            }
-        }
         return String.format("%s - %s used", mostUsed.name(), Util.thousandsSep(mostUsed.usages()));
     }
 }

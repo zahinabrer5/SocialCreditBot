@@ -26,17 +26,14 @@ public class ReplyOnTrigger extends ListenerAdapter {
 //            return;
 //        }
 
-        if (msg.getAuthor().isBot()) {
-            return;
-        }
+        if (msg.getAuthor().isBot()) return;
 
         for (Map.Entry<String, String> entry : dbHandler.getReplyTable().entrySet()) {
             String trigger = entry.getKey();
             String reply = entry.getValue();
 
-            if (msg.getContentRaw().toLowerCase().contains(trigger)) {
+            if (msg.getContentRaw().toLowerCase().contains(trigger))
                 msg.reply(reply).queue();
-            }
         }
     }
 }

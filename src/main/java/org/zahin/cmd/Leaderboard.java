@@ -21,9 +21,8 @@ public class Leaderboard extends Cmd {
     public void run(SlashCommandInteractionEvent event) {
         OptionMapping maxOption = event.getOption("max");
         int max = 10;
-        if (maxOption != null) {
+        if (maxOption != null)
             max = maxOption.getAsInt();
-        }
         leaderboard(event, max);
     }
 

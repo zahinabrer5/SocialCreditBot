@@ -7,11 +7,8 @@ import org.jetbrains.annotations.NotNull;
 public class ButtonListener extends ListenerAdapter {
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
-        if (event.isAcknowledged()) {
-            return;
-        }
-        if (event.getComponentId().startsWith("accept-")) {
+        if (event.isAcknowledged()) return;
+        if (event.getComponentId().startsWith("accept-"))
             Beg.resolveDonation(event);
-        }
     }
 }

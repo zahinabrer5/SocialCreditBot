@@ -21,9 +21,8 @@ public class Profile extends Cmd {
     public void run(SlashCommandInteractionEvent event) {
         OptionMapping userOption = event.getOption("user");
         User user = event.getUser();
-        if (userOption != null) {
+        if (userOption != null)
             user = userOption.getAsUser();
-        }
         profile(event, user);
     }
 

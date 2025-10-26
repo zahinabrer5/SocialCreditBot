@@ -47,9 +47,8 @@ public class Cat extends Cmd {
         CustomEmbed embed = new CustomEmbed();
         embed.setTitle("Cat(s) acquired:");
         // showing how long the operation took could be a security risk in a production environment...
-        if (Boolean.parseBoolean(Bot.dotenv.get("ON_MAINTENANCE"))) {
+        if (Boolean.parseBoolean(Bot.dotenv.get("ON_MAINTENANCE")))
             embed.setFooter("Cat(s) acquired in " + Util.twoDecFmt.format(elapsed) + " ms");
-        }
 
         int colour = Util.mostCommonColour(Util.urlToImage(retrievedCatUrl));
         embed.setColor(colour);

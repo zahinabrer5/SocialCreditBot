@@ -9,9 +9,11 @@ import org.zahin.util.Util;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.util.Random;
 
 public class Rob extends Cmd {
     private final DatabaseHandler dbHandler;
+    private static final Random rand = new Random();
 
     public Rob(DatabaseHandler dbHandler) {
         this.dbHandler = dbHandler;
@@ -65,19 +67,17 @@ public class Rob extends Cmd {
         BigInteger robberBalance = dbHandler.read(robberId).balance();
         BigInteger balanceDiff = robberBalance.subtract(victimBalance).abs();
         BigInteger maxScaled = Util.scaleBigInteger(victimBalance, 0.1);
-        if (balanceDiff.compareTo(BigInteger.valueOf(1000)) >= 0 && maxScaled.compareTo(max) < 0) {
+        if (balanceDiff.compareTo(BigInteger.valueOf(1000)) >= 0 && maxScaled.compareTo(max) < 0)
             max = maxScaled;
-        }
 
         // set a hard maximum possible rob of 500 social credit
         BigInteger fiveHundred = BigInteger.valueOf(500);
-        if (max.compareTo(fiveHundred) > 0) {
+        if (max.compareTo(fiveHundred) > 0)
             max = fiveHundred;
-        }
 
         // all of the above constraints are set to make it harder for people to exploit /rob and
         // get rich very quickly...
-        BigInteger amount = Util.randomBigInteger(min, max, Bot.rand);
+        BigInteger amount = Util.randomBigInteger(min, max, rand);
 
         dbHandler.update(robberId, amount);
         dbHandler.update(victimId, amount.negate());
