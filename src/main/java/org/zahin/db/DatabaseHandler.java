@@ -1,8 +1,5 @@
 package org.zahin.db;
 
-import org.simplejavamail.api.email.Email;
-import org.simplejavamail.api.mailer.Mailer;
-import org.simplejavamail.email.EmailBuilder;
 import org.zahin.Bot;
 import org.zahin.util.Util;
 

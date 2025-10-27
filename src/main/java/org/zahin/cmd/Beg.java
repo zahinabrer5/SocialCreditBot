@@ -1,10 +1,9 @@
 package org.zahin.cmd;
 
 import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.components.buttons.Button;
-import org.zahin.Bot;
 import org.zahin.db.DatabaseHandler;
 import org.zahin.util.CustomEmbed;
 import org.zahin.util.Util;
